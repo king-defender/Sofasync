@@ -13,6 +13,7 @@ export default function SignupPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [created, setCreated] = useState(false);
+  const [verificationRequired, setVerificationRequired] = useState(true);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +31,9 @@ export default function SignupPage() {
       if (!res.ok) {
         setError(data.error || 'Registration failed');
       } else {
-        // Account is unverified until the emailed link is clicked (FR-1.2) - no session yet.
+        // Account is unverified until the emailed link is clicked (FR-1.2) - no
+        // session yet - unless an admin has switched that requirement off.
+        setVerificationRequired(data.verificationRequired ?? true);
         setCreated(true);
       }
     } catch (err) {
@@ -65,8 +68,11 @@ export default function SignupPage() {
           <div className="text-center space-y-3">
             <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto" />
             <p className="text-sm text-gray-300">
-              Account created! Check <span className="font-semibold text-white">{email}</span> for a verification
-              link before logging in.
+              {verificationRequired ? (
+                <>Account created! Check <span className="font-semibold text-white">{email}</span> for a verification link before logging in.</>
+              ) : (
+                <>Account created! You can log in now.</>
+              )}
             </p>
             <Link
               href="/login"

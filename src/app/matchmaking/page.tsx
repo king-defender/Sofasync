@@ -40,6 +40,11 @@ export default function MatchmakingPage() {
       setQueueId(null);
     });
 
+    socket.on('matchmaking:disabled', () => {
+      setInQueue(false);
+      alert('Matchmaking is currently disabled by the site admin.');
+    });
+
     return () => {
       socket.disconnect();
     };

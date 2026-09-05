@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { prisma } from '@/lib/db';
 import { hashPassword } from '@/lib/auth';
 import { sendMail, verificationEmail } from '@/lib/mailer';
+import { getAppSettings } from '@/lib/settings';
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,32 +18,40 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email already registered' }, { status: 400 });
     }
 
+    const { requireEmailVerification } = await getAppSettings();
+
     const passwordHash = await hashPassword(password);
     const user = await prisma.user.create({
       data: {
         email,
         passwordHash,
         displayName,
-        isVerified: false, // FR-1.2: unverified until the emailed link is clicked
+        isVerified: !requireEmailVerification, // FR-1.2, unless an admin has turned the requirement off
         avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(displayName)}`,
       },
     });
 
-    const token = crypto.randomBytes(32).toString('hex');
-    await prisma.emailVerificationToken.create({
-      data: {
-        userId: user.id,
-        tokenHash: token,
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h
-      },
-    });
+    if (requireEmailVerification) {
+      const token = crypto.randomBytes(32).toString('hex');
+      await prisma.emailVerificationToken.create({
+        data: {
+          userId: user.id,
+          tokenHash: token,
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h
+        },
+      });
 
-    const link = `${process.env.NEXTAUTH_URL}/verify-email?token=${token}`;
-    await sendMail({ to: user.email, ...verificationEmail(link) });
+      const link = `${process.env.NEXTAUTH_URL}/verify-email?token=${token}`;
+      await sendMail({ to: user.email, ...verificationEmail(link) });
+    }
 
-    // No session cookie yet - FR-1.3 requires a verified email before login succeeds.
+    // No session cookie yet either way - the frontend routes to /login next,
+    // which is the one place session issuance is decided.
     return NextResponse.json({
-      message: 'Account created. Check your email to verify your account before logging in.',
+      message: requireEmailVerification
+        ? 'Account created. Check your email to verify your account before logging in.'
+        : 'Account created. You can log in now.',
+      verificationRequired: requireEmailVerification,
       user: {
         id: user.id,
         email: user.email,

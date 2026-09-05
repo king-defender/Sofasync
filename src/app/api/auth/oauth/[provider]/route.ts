@@ -3,8 +3,15 @@ import crypto from 'crypto';
 import { prisma } from '@/lib/db';
 import { signAccessToken } from '@/lib/auth';
 import { getProviderConfig, buildAuthorizeUrl, completeOAuth } from '@/lib/oauth';
+import { getAppSettings } from '@/lib/settings';
 
 const STATE_COOKIE = 'oauth_state';
+
+const PROVIDER_SETTING_KEY: Record<string, 'oauthGoogleEnabled' | 'oauthGithubEnabled' | 'oauthDiscordEnabled'> = {
+  google: 'oauthGoogleEnabled',
+  github: 'oauthGithubEnabled',
+  discord: 'oauthDiscordEnabled',
+};
 
 // Single route handles both legs of the flow:
 //  - no `code` query param  -> redirect the browser to the provider's consent screen
@@ -20,6 +27,11 @@ export async function GET(req: NextRequest, { params }: { params: { provider: st
 
   if (!config.clientId || !config.clientSecret) {
     return NextResponse.redirect(new URL(`/login?error=oauth_not_configured&provider=${provider}`, req.url));
+  }
+
+  const settings = await getAppSettings();
+  if (!settings[PROVIDER_SETTING_KEY[provider]]) {
+    return NextResponse.redirect(new URL(`/login?error=oauth_disabled&provider=${provider}`, req.url));
   }
 
   const redirectUri = new URL(`/api/auth/oauth/${provider}`, process.env.NEXTAUTH_URL || req.url).toString();

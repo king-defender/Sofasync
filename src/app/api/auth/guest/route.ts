@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { signAccessToken } from '@/lib/auth';
+import { getAppSettings } from '@/lib/settings';
 
 export async function POST(req: NextRequest) {
   try {
+    const { guestAccessEnabled } = await getAppSettings();
+    if (!guestAccessEnabled) {
+      return NextResponse.json({ error: 'Guest access is currently disabled.' }, { status: 403 });
+    }
+
     const { displayName } = await req.json().catch(() => ({}));
     const guestName = displayName || `Guest_${Math.floor(1000 + Math.random() * 9000)}`;
     const guestEmail = `guest_${Date.now()}@sofasync.local`;

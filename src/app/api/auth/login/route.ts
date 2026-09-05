@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { comparePassword, signAccessToken } from '@/lib/auth';
+import { getAppSettings } from '@/lib/settings';
 
 export async function POST(req: NextRequest) {
   try {
@@ -26,12 +27,17 @@ export async function POST(req: NextRequest) {
     }
 
     // FR-1.3: only a verified email can log in (checked after credentials match,
-    // so a bad password never leaks verification status)
+    // so a bad password never leaks verification status) - unless an admin has
+    // switched the requirement off, in which case this also unblocks anyone who
+    // signed up while it was on but never got/clicked the email.
     if (!user.isVerified) {
-      return NextResponse.json(
-        { error: 'Please verify your email before logging in. Check your inbox for the verification link.' },
-        { status: 403 }
-      );
+      const { requireEmailVerification } = await getAppSettings();
+      if (requireEmailVerification) {
+        return NextResponse.json(
+          { error: 'Please verify your email before logging in. Check your inbox for the verification link.' },
+          { status: 403 }
+        );
+      }
     }
 
     const token = signAccessToken({

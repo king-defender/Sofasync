@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getAuthUser } from '@/lib/auth';
+import { getAppSettings } from '@/lib/settings';
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,6 +18,7 @@ export async function POST(req: NextRequest) {
 
     const { mediaSource = 'SCREEN_SHARE', isPublic = false } = await req.json().catch(() => ({}));
     const validSources = ['SCREEN_SHARE', 'LOCAL_FILE', 'YOUTUBE'];
+    const { publicLobbyEnabled } = await getAppSettings();
 
     // Create room
     const room = await prisma.room.create({
@@ -24,7 +26,7 @@ export async function POST(req: NextRequest) {
         hostId: auth.userId,
         mediaSource: validSources.includes(mediaSource) ? mediaSource : 'SCREEN_SHARE',
         status: 'ACTIVE',
-        isPublic: Boolean(isPublic),
+        isPublic: publicLobbyEnabled ? Boolean(isPublic) : false,
       },
     });
 
@@ -48,6 +50,14 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const scope = req.nextUrl.searchParams.get('scope');
+
+    if (scope === 'public') {
+      const { publicLobbyEnabled } = await getAppSettings();
+      if (!publicLobbyEnabled) {
+        return NextResponse.json({ rooms: [], lobbyDisabled: true });
+      }
+    }
+
     const where = scope === 'public' ? { status: 'ACTIVE' as const, isPublic: true } : { status: 'ACTIVE' as const };
 
     const rooms = await prisma.room.findMany({

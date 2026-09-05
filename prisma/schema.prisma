@@ -211,6 +211,20 @@ model Reaction {
   @@unique([messageId, userId, emoji])
 }
 
+// ---------- Site-wide feature toggles (singleton row, id always "singleton") ----------
+
+model AppSetting {
+  id                       String   @id @default("singleton")
+  requireEmailVerification Boolean  @default(true)
+  guestAccessEnabled       Boolean  @default(true)
+  matchmakingEnabled       Boolean  @default(true)
+  publicLobbyEnabled       Boolean  @default(true)
+  oauthGoogleEnabled       Boolean  @default(true)
+  oauthGithubEnabled       Boolean  @default(true)
+  oauthDiscordEnabled      Boolean  @default(true)
+  updatedAt                DateTime @updatedAt
+}
+
 // ---------- Synced YouTube playback (playlist/queue) ----------
 
 model PlaylistItem {

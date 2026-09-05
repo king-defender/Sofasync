@@ -14,6 +14,9 @@ import {
   UserCheck,
   UserX,
   Plus,
+  Search,
+  Mail,
+  Settings as SettingsIcon,
 } from 'lucide-react';
 
 export default function AdminPage() {
@@ -21,7 +24,14 @@ export default function AdminPage() {
   const [stats, setStats] = useState<any>(null);
   const [reports, setReports] = useState<any[]>([]);
   const [badges, setBadges] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<'reports' | 'badges' | 'logs'>('reports');
+  const [activeTab, setActiveTab] = useState<'reports' | 'badges' | 'logs' | 'users' | 'settings'>('reports');
+
+  // User management
+  const [users, setUsers] = useState<any[]>([]);
+  const [userSearch, setUserSearch] = useState('');
+
+  // Feature-flag settings
+  const [settings, setSettings] = useState<any>(null);
 
   // Resolution note state
   const [selectedReport, setSelectedReport] = useState<any>(null);
@@ -36,7 +46,77 @@ export default function AdminPage() {
     fetchDashboardData();
     fetchReports();
     fetchBadges();
+    fetchUsers();
+    fetchSettings();
   }, []);
+
+  const fetchUsers = async (q?: string) => {
+    try {
+      const res = await fetch(`/api/admin/users${q ? `?q=${encodeURIComponent(q)}` : ''}`);
+      if (res.ok) {
+        const data = await res.json();
+        setUsers(data.users || []);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const fetchSettings = async () => {
+    try {
+      const res = await fetch('/api/admin/settings');
+      if (res.ok) {
+        const data = await res.json();
+        setSettings(data.settings);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const toggleSetting = async (key: string) => {
+    if (!settings) return;
+    const next = { ...settings, [key]: !settings[key] };
+    setSettings(next); // optimistic
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [key]: next[key] }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSettings(data.settings);
+      } else {
+        setSettings(settings); // revert on failure
+      }
+    } catch (e) {
+      setSettings(settings);
+    }
+  };
+
+  const toggleUserVerified = async (userId: string, currentVerified: boolean) => {
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isVerified: !currentVerified }),
+      });
+      if (res.ok) fetchUsers(userSearch);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const resendVerification = async (userId: string) => {
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/resend-verification`, { method: 'POST' });
+      const data = await res.json();
+      alert(data.message || data.error);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -190,7 +270,15 @@ export default function AdminPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-3 border-b border-border pb-2">
+      <div className="flex items-center gap-3 border-b border-border pb-2 flex-wrap">
+        <button
+          onClick={() => setActiveTab('users')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            activeTab === 'users' ? 'bg-primary text-white shadow' : 'text-gray-400 hover:text-white'
+          }`}
+        >
+          Users ({users.length})
+        </button>
         <button
           onClick={() => setActiveTab('reports')}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
@@ -215,7 +303,169 @@ export default function AdminPage() {
         >
           Admin Action Logs
         </button>
+        <button
+          onClick={() => setActiveTab('settings')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
+            activeTab === 'settings' ? 'bg-primary text-white shadow' : 'text-gray-400 hover:text-white'
+          }`}
+        >
+          <SettingsIcon className="w-3.5 h-3.5" />
+          Feature Settings
+        </button>
       </div>
+
+      {/* Tab: User Management */}
+      {activeTab === 'users' && (
+        <div className="space-y-4">
+          <div className="relative max-w-sm">
+            <Search className="w-4 h-4 text-gray-500 absolute left-3.5 top-3" />
+            <input
+              type="text"
+              value={userSearch}
+              onChange={(e) => {
+                setUserSearch(e.target.value);
+                fetchUsers(e.target.value);
+              }}
+              placeholder="Search by name or email..."
+              className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-primary"
+            />
+          </div>
+
+          <div className="glass-panel rounded-2xl border border-white/5 overflow-hidden overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-white/5 text-gray-400 uppercase font-semibold border-b border-border">
+                <tr>
+                  <th className="p-4">User</th>
+                  <th className="p-4">Role</th>
+                  <th className="p-4">Verified</th>
+                  <th className="p-4">Badges</th>
+                  <th className="p-4">Joined</th>
+                  <th className="p-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {users.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-gray-500">
+                      No users found.
+                    </td>
+                  </tr>
+                ) : (
+                  users.map((u) => (
+                    <tr key={u.id} className="hover:bg-white/5">
+                      <td className="p-4">
+                        <div className="flex items-center gap-2.5">
+                          <img src={u.avatarUrl} alt="" className="w-7 h-7 rounded-full" />
+                          <div>
+                            <div className="font-semibold text-white flex items-center gap-1.5">
+                              {u.displayName}
+                              {u.isSuspended && (
+                                <span className="text-[9px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded uppercase font-bold">
+                                  Suspended
+                                </span>
+                              )}
+                              {u.isGuest && (
+                                <span className="text-[9px] bg-white/10 text-gray-400 px-1.5 py-0.5 rounded uppercase font-bold">
+                                  Guest
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-gray-500">{u.email}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4 font-mono text-indigo-300">{u.role}</td>
+                      <td className="p-4">
+                        <span
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                            u.isVerified ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'
+                          }`}
+                        >
+                          {u.isVerified ? 'Verified' : 'Unverified'}
+                        </span>
+                      </td>
+                      <td className="p-4 text-gray-400">{u._count?.badges ?? 0}</td>
+                      <td className="p-4 text-gray-400">{new Date(u.createdAt).toLocaleDateString()}</td>
+                      <td className="p-4 text-right space-x-2 whitespace-nowrap">
+                        <button
+                          onClick={() => toggleUserVerified(u.id, u.isVerified)}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
+                            u.isVerified
+                              ? 'bg-white/10 text-gray-300 hover:bg-white/20'
+                              : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
+                          }`}
+                        >
+                          {u.isVerified ? 'Unverify' : 'Verify'}
+                        </button>
+                        {!u.isVerified && !u.isGuest && (
+                          <button
+                            onClick={() => resendVerification(u.id)}
+                            title="Resend verification email"
+                            className="px-2 py-1 rounded-lg text-xs font-bold bg-white/10 text-gray-300 hover:bg-white/20 inline-flex items-center gap-1"
+                          >
+                            <Mail className="w-3 h-3" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => toggleUserSuspension(u.id, u.isSuspended)}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
+                            u.isSuspended
+                              ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
+                              : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                          }`}
+                        >
+                          {u.isSuspended ? 'Unsuspend' : 'Suspend'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Tab: Feature Settings */}
+      {activeTab === 'settings' && settings && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl">
+          {[
+            {
+              key: 'requireEmailVerification',
+              title: 'Require email verification',
+              desc: 'When off, new signups are auto-verified and existing unverified accounts can log in immediately. Use this if SMTP isn’t delivering.',
+            },
+            { key: 'guestAccessEnabled', title: 'Guest access', desc: '"Instant Guest Start" on the homepage.' },
+            { key: 'matchmakingEnabled', title: 'Stranger matchmaking', desc: 'The "Find a Buddy" queue.' },
+            { key: 'publicLobbyEnabled', title: 'Public lobby', desc: 'Rooms marked public and the /lobby page.' },
+            { key: 'oauthGoogleEnabled', title: 'Google sign-in', desc: 'Kill switch independent of whether credentials are configured.' },
+            { key: 'oauthGithubEnabled', title: 'GitHub sign-in', desc: 'Kill switch independent of whether credentials are configured.' },
+            { key: 'oauthDiscordEnabled', title: 'Discord sign-in', desc: 'Kill switch independent of whether credentials are configured.' },
+          ].map((flag) => (
+            <div
+              key={flag.key}
+              className="glass-panel p-4 rounded-2xl border border-white/10 flex items-start justify-between gap-3"
+            >
+              <div>
+                <h4 className="font-bold text-white text-sm">{flag.title}</h4>
+                <p className="text-xs text-gray-400 mt-0.5">{flag.desc}</p>
+              </div>
+              <button
+                onClick={() => toggleSetting(flag.key)}
+                className={`relative flex-shrink-0 w-11 h-6 rounded-full transition-colors ${
+                  settings[flag.key] ? 'bg-primary' : 'bg-white/10'
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${
+                    settings[flag.key] ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Tab 1: Safety Reports Queue */}
       {activeTab === 'reports' && (

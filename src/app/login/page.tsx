@@ -7,6 +7,7 @@ import { Tv, Lock, Mail, ArrowRight, Github, Chrome, Disc as Discord } from 'luc
 
 const OAUTH_ERROR_MESSAGES: Record<string, string> = {
   oauth_not_configured: 'That sign-in provider is not configured yet. Contact the site admin.',
+  oauth_disabled: 'That sign-in method is currently disabled by the site admin.',
   oauth_state_mismatch: 'That sign-in link expired or was already used. Please try again.',
   oauth_failed: 'Sign-in with that provider failed. Please try again.',
   account_suspended: 'This account has been suspended.',

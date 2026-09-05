@@ -21,6 +21,7 @@ export default function LobbyPage() {
   const router = useRouter();
   const [rooms, setRooms] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lobbyDisabled, setLobbyDisabled] = useState(false);
 
   useEffect(() => {
     fetchPublicRooms();
@@ -33,6 +34,7 @@ export default function LobbyPage() {
       if (res.ok) {
         const data = await res.json();
         setRooms(data.rooms || []);
+        setLobbyDisabled(Boolean(data.lobbyDisabled));
       } else if (res.status === 401) {
         router.push('/login');
       }
@@ -64,7 +66,11 @@ export default function LobbyPage() {
         </button>
       </div>
 
-      {rooms.length === 0 ? (
+      {lobbyDisabled ? (
+        <div className="glass-panel p-10 rounded-2xl text-center border border-white/5">
+          <p className="text-sm text-gray-400">The public lobby is currently disabled by the site admin.</p>
+        </div>
+      ) : rooms.length === 0 ? (
         <div className="glass-panel p-10 rounded-2xl text-center border border-white/5 space-y-2">
           <p className="text-sm text-gray-400">No public rooms open right now.</p>
           <Link href="/dashboard" className="text-primary text-xs font-semibold hover:underline">

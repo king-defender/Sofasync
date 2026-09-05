@@ -342,6 +342,16 @@ app.prepare().then(() => {
     // Matchmaking Join Queue (FR-4.1 - FR-4.6)
     socket.on('matchmaking:join', async ({ userId, filters }) => {
       try {
+        const settings = await prisma.appSetting.upsert({
+          where: { id: 'singleton' },
+          update: {},
+          create: { id: 'singleton' },
+        });
+        if (!settings.matchmakingEnabled) {
+          socket.emit('matchmaking:disabled');
+          return;
+        }
+
         const entry = await prisma.matchmakingQueue.create({
           data: {
             userId,
