@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { signAccessToken } from '@/lib/auth';
+import { signAccessToken, AUTH_COOKIE_OPTIONS } from '@/lib/auth';
 import { getAppSettings } from '@/lib/settings';
 
 export async function POST(req: NextRequest) {
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
       token,
     });
 
-    response.cookies.set('token', token, { httpOnly: true, path: '/' });
+    response.cookies.set('token', token, AUTH_COOKIE_OPTIONS);
     return response;
   } catch (error) {
     console.error('Guest creation error:', error);

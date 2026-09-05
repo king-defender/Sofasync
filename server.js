@@ -3,6 +3,7 @@ const next = require('next');
 const { Server } = require('socket.io');
 const { PrismaClient } = require('@prisma/client');
 const Redis = require('ioredis');
+const jwt = require('jsonwebtoken');
 
 const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
@@ -10,6 +11,10 @@ const handle = app.getRequestHandler();
 const prisma = new PrismaClient();
 const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
 
+if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET must be set in production - refusing to start with the public fallback secret.');
+}
+const JWT_SECRET = process.env.JWT_SECRET || 'sofasync_jwt_secret_key_production_ready_hash_2026';
 const PORT = process.env.PORT || 3000;
 
 // Live routing only: which socket a waiting user is currently connected on.
@@ -17,6 +22,30 @@ const PORT = process.env.PORT || 3000;
 // server restart - this hash just tells a freshly-restarted process where to
 // deliver a match once one is found.
 const MATCHMAKING_SOCKETS_KEY = 'matchmaking:sockets';
+
+// The HTTP side authenticates every request off the httpOnly "token" cookie
+// (see src/lib/auth.ts). Socket.IO's handshake is a plain HTTP request too -
+// same cookie rides along automatically for a same-origin connection - so we
+// verify it here and treat the result as the only trustworthy identity for
+// the lifetime of the socket. Every event below uses socket.data.authUserId,
+// never a client-supplied userId/senderId field: those are trivially
+// forgeable (e.g. the room API already exposes hostId, so trusting a claimed
+// senderId would let anyone impersonate the host and bypass host-lock).
+function getTokenFromHandshake(socket) {
+  const cookieHeader = socket.handshake.headers?.cookie || '';
+  const match = cookieHeader.match(/(?:^|;\s*)token=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+function verifySocketAuth(socket) {
+  const token = getTokenFromHandshake(socket);
+  if (!token) return null;
+  try {
+    return jwt.verify(token, JWT_SECRET);
+  } catch {
+    return null;
+  }
+}
 
 app.prepare().then(() => {
   const httpServer = createServer((req, res) => {
@@ -32,38 +61,45 @@ app.prepare().then(() => {
 
   // Socket.IO Connection Handler
   io.on('connection', (socket) => {
-    console.log(`Socket connected: ${socket.id}`);
+    const authPayload = verifySocketAuth(socket);
+    if (!authPayload) {
+      socket.emit('auth:error', { message: 'Authentication required' });
+      socket.disconnect(true);
+      return;
+    }
+
+    socket.data = { authUserId: authPayload.userId, authRole: authPayload.role };
+    console.log(`Socket connected: ${socket.id} (user ${authPayload.userId})`);
 
     // Join room
-    socket.on('room:join', async ({ roomId, userId, displayName }) => {
-      socket.join(roomId);
-      socket.data = { roomId, userId, displayName };
-
-      console.log(`User ${displayName} (${userId}) joined room ${roomId}`);
-
-      // Broadcast to existing room members
-      socket.to(roomId).emit('participant:joined', { userId, displayName });
-
-      // Fetch past room chat history & reactions
+    socket.on('room:join', async ({ roomId }) => {
       try {
+        const user = await prisma.user.findUnique({ where: { id: socket.data.authUserId } });
+        if (!user || user.isSuspended) {
+          socket.emit('auth:error', { message: 'Account unavailable' });
+          socket.disconnect(true);
+          return;
+        }
+
+        socket.join(roomId);
+        socket.data.roomId = roomId;
+
+        const userId = socket.data.authUserId;
+        const displayName = user.displayName;
+
+        console.log(`User ${displayName} (${userId}) joined room ${roomId}`);
+        socket.to(roomId).emit('participant:joined', { userId, displayName });
+
         const messages = await prisma.message.findMany({
           where: { roomId },
           include: {
-            sender: {
-              select: { id: true, displayName: true, avatarUrl: true },
-            },
+            sender: { select: { id: true, displayName: true, avatarUrl: true } },
             reactions: true,
           },
           orderBy: { createdAt: 'asc' },
         });
-
         socket.emit('chat:history', messages);
-      } catch (err) {
-        console.error('Error fetching chat history:', err);
-      }
 
-      // Fetch playlist/queue state + host-lock setting for synced YouTube mode
-      try {
         const [room, playlist] = await Promise.all([
           prisma.room.findUnique({ where: { id: roomId }, select: { hostControlsOnly: true, hostId: true } }),
           prisma.playlistItem.findMany({
@@ -81,7 +117,7 @@ app.prepare().then(() => {
           socket.emit('youtube:load', { youtubeId: nowPlaying.youtubeId, title: nowPlaying.title });
         }
       } catch (err) {
-        console.error('Error fetching playlist state:', err);
+        console.error('room:join error:', err);
       }
     });
 
@@ -93,9 +129,10 @@ app.prepare().then(() => {
     }
 
     // Add a link to the room's queue (FR-2.x extension: synced YouTube/URL source)
-    socket.on('playlist:add', async ({ roomId, senderId, youtubeId, title }) => {
+    socket.on('playlist:add', async ({ roomId, youtubeId, title }) => {
       try {
         if (!youtubeId) return;
+        const senderId = socket.data.authUserId;
         const count = await prisma.playlistItem.count({ where: { roomId } });
         await prisma.playlistItem.create({
           data: { roomId, addedById: senderId, youtubeId, title: title || null, order: count },
@@ -113,8 +150,9 @@ app.prepare().then(() => {
     });
 
     // Remove a queued item - the person who added it, or the host, may do this
-    socket.on('playlist:remove', async ({ roomId, senderId, itemId }) => {
+    socket.on('playlist:remove', async ({ roomId, itemId }) => {
       try {
+        const senderId = socket.data.authUserId;
         const item = await prisma.playlistItem.findUnique({ where: { id: itemId } });
         if (!item || item.roomId !== roomId) return;
 
@@ -134,8 +172,9 @@ app.prepare().then(() => {
     });
 
     // Load a specific queued item as "now playing" (host-gated when locked)
-    socket.on('playlist:play', async ({ roomId, senderId, itemId }) => {
+    socket.on('playlist:play', async ({ roomId, itemId }) => {
       try {
+        const senderId = socket.data.authUserId;
         if (!(await canControlPlayback(roomId, senderId))) return;
 
         const item = await prisma.playlistItem.findUnique({ where: { id: itemId } });
@@ -162,8 +201,9 @@ app.prepare().then(() => {
 
     // Load a brand new link and play it immediately (skips the queue - for
     // "start watching this now" rather than "add for later")
-    socket.on('youtube:load-and-play', async ({ roomId, senderId, youtubeId, title }) => {
+    socket.on('youtube:load-and-play', async ({ roomId, youtubeId, title }) => {
       try {
+        const senderId = socket.data.authUserId;
         if (!youtubeId || !(await canControlPlayback(roomId, senderId))) return;
 
         await prisma.playlistItem.updateMany({
@@ -189,8 +229,9 @@ app.prepare().then(() => {
     });
 
     // Play/pause/seek sync for the currently loaded YouTube video (host-gated when locked)
-    socket.on('youtube:control', async ({ roomId, senderId, action, time }) => {
+    socket.on('youtube:control', async ({ roomId, action, time }) => {
       try {
+        const senderId = socket.data.authUserId;
         if (!(await canControlPlayback(roomId, senderId))) return;
         socket.to(roomId).emit('youtube:control', { action, time });
       } catch (err) {
@@ -199,8 +240,9 @@ app.prepare().then(() => {
     });
 
     // Host toggles whether only they can drive playback, or anyone can
-    socket.on('room:settings-update', async ({ roomId, senderId, hostControlsOnly }) => {
+    socket.on('room:settings-update', async ({ roomId, hostControlsOnly }) => {
       try {
+        const senderId = socket.data.authUserId;
         const room = await prisma.room.findUnique({ where: { id: roomId }, select: { hostId: true } });
         if (!room || room.hostId !== senderId) return;
 
@@ -212,8 +254,9 @@ app.prepare().then(() => {
     });
 
     // Send Message (FR-6.1 - FR-6.4, FR-6.6)
-    socket.on('message:send', async ({ roomId, senderId, content, videoTimestamp }) => {
+    socket.on('message:send', async ({ roomId, content, videoTimestamp }) => {
       try {
+        const senderId = socket.data.authUserId;
         const message = await prisma.message.create({
           data: {
             roomId,
@@ -222,9 +265,7 @@ app.prepare().then(() => {
             videoTimestamp: videoTimestamp !== undefined ? videoTimestamp : null,
           },
           include: {
-            sender: {
-              select: { id: true, displayName: true, avatarUrl: true },
-            },
+            sender: { select: { id: true, displayName: true, avatarUrl: true } },
             reactions: true,
           },
         });
@@ -254,12 +295,11 @@ app.prepare().then(() => {
     });
 
     // Emoji Reaction (FR-6.5)
-    socket.on('message:react', async ({ messageId, emoji, userId }) => {
+    socket.on('message:react', async ({ messageId, emoji }) => {
       try {
+        const userId = socket.data.authUserId;
         const existing = await prisma.reaction.findUnique({
-          where: {
-            messageId_userId_emoji: { messageId, userId, emoji },
-          },
+          where: { messageId_userId_emoji: { messageId, userId, emoji } },
         });
 
         let added = false;
@@ -267,9 +307,7 @@ app.prepare().then(() => {
           await prisma.reaction.delete({ where: { id: existing.id } });
           added = false;
         } else {
-          await prisma.reaction.create({
-            data: { messageId, userId, emoji },
-          });
+          await prisma.reaction.create({ data: { messageId, userId, emoji } });
           added = true;
         }
 
@@ -283,8 +321,9 @@ app.prepare().then(() => {
     });
 
     // Media State Toggle (FR-5.1/5.2)
-    socket.on('participant:media-state', async ({ roomId, userId, cameraOn, micOn }) => {
+    socket.on('participant:media-state', async ({ roomId, cameraOn, micOn }) => {
       try {
+        const userId = socket.data.authUserId;
         await prisma.roomParticipant.updateMany({
           where: { roomId, userId, leftAt: null },
           data: { cameraOn, micOn },
@@ -299,49 +338,80 @@ app.prepare().then(() => {
     // Host switches media source (FR-2.5)
     socket.on('room:media-source-changed', async ({ roomId, mediaSource }) => {
       try {
-        await prisma.room.update({
-          where: { id: roomId },
-          data: { mediaSource },
-        });
+        const senderId = socket.data.authUserId;
+        const room = await prisma.room.findUnique({ where: { id: roomId }, select: { hostId: true } });
+        if (!room || room.hostId !== senderId) return;
 
+        await prisma.room.update({ where: { id: roomId }, data: { mediaSource } });
         io.to(roomId).emit('room:media-source-changed', { mediaSource });
       } catch (err) {
         console.error('Error updating media source:', err);
       }
     });
 
-    // Movie stream start / stop events
-    socket.on('room:movie-stream-started', ({ roomId, streamType }) => {
-      socket.to(roomId).emit('room:movie-stream-started', { streamType, hostId: socket.data?.userId });
+    // Movie stream start / stop events (host only - these drive what every
+    // other participant's player shows)
+    socket.on('room:movie-stream-started', async ({ roomId, streamType }) => {
+      try {
+        const senderId = socket.data.authUserId;
+        const room = await prisma.room.findUnique({ where: { id: roomId }, select: { hostId: true } });
+        if (!room || room.hostId !== senderId) return;
+        socket.to(roomId).emit('room:movie-stream-started', { streamType, hostId: senderId });
+      } catch (err) {
+        console.error('room:movie-stream-started error:', err);
+      }
     });
 
-    socket.on('room:movie-stream-stopped', ({ roomId }) => {
-      io.to(roomId).emit('room:movie-stream-stopped');
+    socket.on('room:movie-stream-stopped', async ({ roomId }) => {
+      try {
+        const senderId = socket.data.authUserId;
+        const room = await prisma.room.findUnique({ where: { id: roomId }, select: { hostId: true } });
+        if (!room || room.hostId !== senderId) return;
+        io.to(roomId).emit('room:movie-stream-stopped');
+      } catch (err) {
+        console.error('room:movie-stream-stopped error:', err);
+      }
     });
 
-    // WebRTC Signaling (mesh topology)
-    socket.on('webrtc:offer', ({ targetUserId, sdp, senderUserId, isMovieTrack }) => {
-      socket.to(socket.data?.roomId).emit('webrtc:offer', { targetUserId, sdp, senderUserId, isMovieTrack });
+    // WebRTC Signaling (mesh topology) - senderUserId is always the verified
+    // socket identity, never trusted from the payload, so nobody can forge
+    // signaling as another participant.
+    socket.on('webrtc:offer', ({ targetUserId, sdp, isMovieTrack }) => {
+      socket.to(socket.data?.roomId).emit('webrtc:offer', {
+        targetUserId,
+        sdp,
+        senderUserId: socket.data.authUserId,
+        isMovieTrack,
+      });
     });
 
-    socket.on('webrtc:answer', ({ targetUserId, sdp, senderUserId }) => {
-      socket.to(socket.data?.roomId).emit('webrtc:answer', { targetUserId, sdp, senderUserId });
+    socket.on('webrtc:answer', ({ targetUserId, sdp }) => {
+      socket.to(socket.data?.roomId).emit('webrtc:answer', {
+        targetUserId,
+        sdp,
+        senderUserId: socket.data.authUserId,
+      });
     });
 
-    socket.on('webrtc:ice-candidate', ({ targetUserId, candidate, senderUserId }) => {
-      socket.to(socket.data?.roomId).emit('webrtc:ice-candidate', { targetUserId, candidate, senderUserId });
+    socket.on('webrtc:ice-candidate', ({ targetUserId, candidate }) => {
+      socket.to(socket.data?.roomId).emit('webrtc:ice-candidate', {
+        targetUserId,
+        candidate,
+        senderUserId: socket.data.authUserId,
+      });
     });
 
     // Plain passthrough - carries whatever fields the sender includes (e.g.
     // trackId/trackKind so peers can tell the movie feed from a webcam track;
-    // see RoomClient.tsx's movieTrackIds).
+    // see RoomClient.tsx's movieTrackIds). No identity claims in this one.
     socket.on('webrtc:track-added', (payload) => {
       socket.to(socket.data?.roomId).emit('webrtc:track-added', payload);
     });
 
     // Matchmaking Join Queue (FR-4.1 - FR-4.6)
-    socket.on('matchmaking:join', async ({ userId, filters }) => {
+    socket.on('matchmaking:join', async ({ filters }) => {
       try {
+        const userId = socket.data.authUserId;
         const settings = await prisma.appSetting.upsert({
           where: { id: 'singleton' },
           update: {},
@@ -375,8 +445,9 @@ app.prepare().then(() => {
     });
 
     // Leave Matchmaking Queue (FR-4.4)
-    socket.on('matchmaking:leave', async ({ queueId, userId }) => {
+    socket.on('matchmaking:leave', async ({ queueId }) => {
       try {
+        const userId = socket.data.authUserId;
         if (queueId) {
           await prisma.matchmakingQueue.update({
             where: { id: queueId },
@@ -392,7 +463,7 @@ app.prepare().then(() => {
 
     // Disconnect
     socket.on('disconnect', async () => {
-      const { roomId, userId, queueId } = socket.data || {};
+      const { roomId, authUserId: userId, queueId } = socket.data || {};
       if (roomId && userId) {
         console.log(`User ${userId} disconnected from room ${roomId}`);
         socket.to(roomId).emit('participant:left', { userId });

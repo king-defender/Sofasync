@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { prisma } from '@/lib/db';
-import { signAccessToken } from '@/lib/auth';
+import { signAccessToken, AUTH_COOKIE_OPTIONS } from '@/lib/auth';
 import { getProviderConfig, buildAuthorizeUrl, completeOAuth } from '@/lib/oauth';
 import { getAppSettings } from '@/lib/settings';
 
@@ -48,6 +48,7 @@ export async function GET(req: NextRequest, { params }: { params: { provider: st
       path: '/',
       maxAge: 300,
       sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
     });
     return response;
   }
@@ -88,7 +89,7 @@ export async function GET(req: NextRequest, { params }: { params: { provider: st
     });
 
     const response = NextResponse.redirect(new URL('/dashboard', req.url));
-    response.cookies.set('token', token, { httpOnly: true, path: '/' });
+    response.cookies.set('token', token, AUTH_COOKIE_OPTIONS);
     response.cookies.delete(STATE_COOKIE);
     return response;
   } catch (error) {

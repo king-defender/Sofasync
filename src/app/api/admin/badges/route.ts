@@ -2,8 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getAuthUser } from '@/lib/auth';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const auth = getAuthUser(req);
+    if (!auth || auth.role !== 'SUPER_ADMIN') {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+    }
+
     const badges = await prisma.badge.findMany();
     return NextResponse.json({ badges });
   } catch (error) {

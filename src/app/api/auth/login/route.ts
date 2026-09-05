@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { comparePassword, signAccessToken } from '@/lib/auth';
+import { comparePassword, signAccessToken, AUTH_COOKIE_OPTIONS } from '@/lib/auth';
 import { getAppSettings } from '@/lib/settings';
+import { isRateLimited, recordFailure, resetRateLimit } from '@/lib/rate-limit';
+
+const LOGIN_ATTEMPT_LIMIT = 5;
+const LOGIN_WINDOW_SECONDS = 15 * 60;
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,8 +15,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email and password required' }, { status: 400 });
     }
 
+    // Keyed by email, not IP - this app sits behind Render's proxy without
+    // guaranteed client-IP forwarding configured, and email-keyed still
+    // stops the thing that actually matters here: guessing one account's
+    // password over and over.
+    const rateLimitKey = `ratelimit:login:${email.toLowerCase()}`;
+    if (await isRateLimited(rateLimitKey, LOGIN_ATTEMPT_LIMIT)) {
+      return NextResponse.json(
+        { error: 'Too many failed login attempts. Try again in 15 minutes.' },
+        { status: 429 }
+      );
+    }
+
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user || !user.passwordHash) {
+      await recordFailure(rateLimitKey, LOGIN_WINDOW_SECONDS);
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
@@ -23,8 +40,11 @@ export async function POST(req: NextRequest) {
 
     const isMatch = await comparePassword(password, user.passwordHash);
     if (!isMatch) {
+      await recordFailure(rateLimitKey, LOGIN_WINDOW_SECONDS);
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
+
+    await resetRateLimit(rateLimitKey);
 
     // FR-1.3: only a verified email can log in (checked after credentials match,
     // so a bad password never leaks verification status) - unless an admin has
@@ -58,7 +78,7 @@ export async function POST(req: NextRequest) {
       token,
     });
 
-    response.cookies.set('token', token, { httpOnly: true, path: '/' });
+    response.cookies.set('token', token, AUTH_COOKIE_OPTIONS);
     return response;
   } catch (error) {
     console.error('Login error:', error);

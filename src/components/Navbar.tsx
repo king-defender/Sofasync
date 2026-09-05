@@ -48,7 +48,9 @@ export default function Navbar() {
   };
 
   const handleLogout = async () => {
-    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    // The token cookie is httpOnly (deliberately invisible to JS) - only a
+    // server response can actually clear it, so this has to be a real call.
+    await fetch('/api/auth/logout', { method: 'POST' });
     setUser(null);
     router.push('/login');
   };

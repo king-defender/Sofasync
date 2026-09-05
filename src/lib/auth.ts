@@ -2,7 +2,24 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { NextRequest } from 'next/server';
 
+// Fail loudly rather than silently signing/verifying every session with a
+// secret that's sitting in this file's git history on a public repo. The
+// fallback only exists so `npm run dev` works with zero setup locally -
+// production must always set its own.
+if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET must be set in production - refusing to start with the public fallback secret.');
+}
 const JWT_SECRET = process.env.JWT_SECRET || 'sofasync_jwt_secret_key_production_ready_hash_2026';
+
+// Shared so every place that sets/clears the auth cookie agrees on its
+// attributes - mismatched attributes between set and clear can leave a
+// cookie the browser won't actually let a later call delete.
+export const AUTH_COOKIE_OPTIONS = {
+  httpOnly: true,
+  path: '/',
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax' as const,
+};
 
 export interface TokenPayload {
   userId: string;
