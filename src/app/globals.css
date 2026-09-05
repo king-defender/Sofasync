@@ -2,9 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Light theme (default) */
 :root {
+  --background: 250 250 249;
+  --foreground: 17 17 20;
+  --card: 255 255 255;
+  --card-foreground: 17 17 20;
+  --muted: 236 236 240;
+  --muted-foreground: 100 100 112;
+  --border: 224 224 230;
+  --glass-panel-bg: 255 255 255;
+  --glass-panel-alpha: 0.75;
+  --glass-card-bg: 255 255 255;
+  --glass-card-alpha: 0.5;
+  --scrollbar-track: 236 236 240;
+}
+
+/* Dark theme */
+.dark {
   --background: 9 10 15;
   --foreground: 243 244 246;
+  --card: 18 20 29;
+  --card-foreground: 243 244 246;
+  --muted: 31 41 55;
+  --muted-foreground: 156 163 175;
+  --border: 31 41 61;
+  --glass-panel-bg: 18 20 29;
+  --glass-panel-alpha: 0.75;
+  --glass-card-bg: 31 41 61;
+  --glass-card-alpha: 0.4;
+  --scrollbar-track: 15 17 26;
 }
 
 body {
@@ -12,20 +39,21 @@ body {
   background: rgb(var(--background));
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   overflow-x: hidden;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Glassmorphism utilities */
+/* Glassmorphism utilities - tokens flip with .dark, not hardcoded per-theme */
 .glass-panel {
-  background: rgba(18, 20, 29, 0.75);
+  background: rgb(var(--glass-panel-bg) / var(--glass-panel-alpha));
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgb(var(--foreground) / 0.08);
 }
 
 .glass-card {
-  background: rgba(31, 41, 61, 0.4);
+  background: rgb(var(--glass-card-bg) / var(--glass-card-alpha));
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgb(var(--foreground) / 0.06);
 }
 
 .glow-button {
@@ -44,7 +72,7 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(15, 17, 26, 0.5);
+  background: rgb(var(--scrollbar-track) / 0.5);
 }
 ::-webkit-scrollbar-thumb {
   background: rgba(99, 102, 241, 0.4);

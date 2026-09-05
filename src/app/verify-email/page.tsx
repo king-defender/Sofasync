@@ -50,24 +50,24 @@ function VerifyEmailContent() {
     <div className="min-h-[calc(100vh-65px)] flex items-center justify-center p-6">
       <div className="w-full max-w-md glass-panel p-8 rounded-3xl border border-border shadow-2xl space-y-5 text-center">
         <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary to-accent flex items-center justify-center mx-auto">
-          <Tv className="w-6 h-6 text-white" />
+          <Tv className="w-6 h-6 text-foreground" />
         </div>
 
         {status === 'verifying' && (
           <>
             <Loader2 className="w-8 h-8 text-primary animate-spin mx-auto" />
-            <p className="text-sm text-gray-300">Verifying your email...</p>
+            <p className="text-sm text-muted-foreground">Verifying your email...</p>
           </>
         )}
 
         {status === 'success' && (
           <>
             <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto" />
-            <h2 className="text-xl font-bold text-white">Email verified</h2>
-            <p className="text-xs text-gray-400">Your account is ready. You can log in now.</p>
+            <h2 className="text-xl font-bold text-foreground">Email verified</h2>
+            <p className="text-xs text-muted-foreground">Your account is ready. You can log in now.</p>
             <Link
               href="/login"
-              className="inline-block w-full py-3 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl glow-button transition-all"
+              className="inline-block w-full py-3 bg-primary hover:bg-primary-hover text-foreground text-xs font-bold rounded-xl glow-button transition-all"
             >
               Go to Login
             </Link>
@@ -77,8 +77,8 @@ function VerifyEmailContent() {
         {status === 'error' && (
           <>
             <XCircle className="w-10 h-10 text-red-400 mx-auto" />
-            <h2 className="text-xl font-bold text-white">Verification failed</h2>
-            <p className="text-xs text-gray-400">{error}</p>
+            <h2 className="text-xl font-bold text-foreground">Verification failed</h2>
+            <p className="text-xs text-muted-foreground">{error}</p>
             <Link href="/login" className="text-primary text-xs font-semibold hover:underline">
               Back to Login
             </Link>

@@ -811,9 +811,9 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
       {/* Top Room Control Bar */}
       <div className="glass-panel px-6 py-3 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
+          <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
-            Watch Room <span className="text-gray-400 font-mono text-xs">({roomId})</span>
+            Watch Room <span className="text-muted-foreground font-mono text-xs">({roomId})</span>
           </h2>
           <span className="text-xs px-2.5 py-1 rounded-full bg-primary/20 text-primary border border-primary/30 font-semibold uppercase">
             {mediaSource === 'SCREEN_SHARE' ? 'Screen Share' : mediaSource === 'YOUTUBE' ? 'YouTube' : 'Local File'} Mode
@@ -823,7 +823,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
               title={hostControlsOnly ? 'Only the host can play/pause/seek' : 'Anyone can control playback'}
               className={`text-xs px-2.5 py-1 rounded-full border font-semibold flex items-center gap-1.5 ${
                 hostControlsOnly
-                  ? 'bg-white/5 text-gray-400 border-white/10'
+                  ? 'bg-foreground/5 text-muted-foreground border-foreground/10'
                   : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
               }`}
             >
@@ -853,7 +853,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border transition-all ${
               !cameraOn
                 ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300'
-                : 'bg-white/5 border-white/10 text-gray-400'
+                : 'bg-foreground/5 border-foreground/10 text-muted-foreground'
             }`}
           >
             <Headphones className="w-3.5 h-3.5" />
@@ -864,7 +864,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
           {isHost && mediaSource === 'YOUTUBE' && (
             <button
               onClick={toggleHostLock}
-              className="px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-white/10 bg-white/5 hover:bg-white/10 text-gray-200 transition-all"
+              className="px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-foreground/10 bg-foreground/5 hover:bg-foreground/10 text-foreground transition-all"
             >
               {hostControlsOnly ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
               {hostControlsOnly ? 'Let Anyone Control' : 'Lock to Host Only'}
@@ -873,11 +873,11 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
 
           {/* Host Switch Source */}
           {isHost && (
-            <div className="flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/10">
+            <div className="flex items-center gap-1 bg-foreground/5 p-1 rounded-xl border border-foreground/10">
               <button
                 onClick={() => handleSwitchMediaSource('SCREEN_SHARE')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                  mediaSource === 'SCREEN_SHARE' ? 'bg-primary text-white shadow' : 'text-gray-400 hover:text-white'
+                  mediaSource === 'SCREEN_SHARE' ? 'bg-primary text-foreground shadow' : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <Monitor className="w-3.5 h-3.5" />
@@ -886,7 +886,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
               <button
                 onClick={() => handleSwitchMediaSource('LOCAL_FILE')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                  mediaSource === 'LOCAL_FILE' ? 'bg-primary text-white shadow' : 'text-gray-400 hover:text-white'
+                  mediaSource === 'LOCAL_FILE' ? 'bg-primary text-foreground shadow' : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <FileVideo className="w-3.5 h-3.5" />
@@ -895,7 +895,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
               <button
                 onClick={() => handleSwitchMediaSource('YOUTUBE')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                  mediaSource === 'YOUTUBE' ? 'bg-primary text-white shadow' : 'text-gray-400 hover:text-white'
+                  mediaSource === 'YOUTUBE' ? 'bg-primary text-foreground shadow' : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <Youtube className="w-3.5 h-3.5" />
@@ -906,7 +906,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
 
           <button
             onClick={() => setShowInviteModal(true)}
-            className="px-3.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-200 text-xs font-semibold flex items-center gap-1.5 border border-white/10 transition-colors"
+            className="px-3.5 py-1.5 rounded-xl bg-foreground/5 hover:bg-foreground/10 text-foreground text-xs font-semibold flex items-center gap-1.5 border border-foreground/10 transition-colors"
           >
             <UserPlus className="w-3.5 h-3.5 text-primary" />
             Invite Buddy
@@ -914,7 +914,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
 
           <button
             onClick={copyRoomLink}
-            className="px-3.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-200 text-xs font-semibold flex items-center gap-1.5 border border-white/10 transition-colors"
+            className="px-3.5 py-1.5 rounded-xl bg-foreground/5 hover:bg-foreground/10 text-foreground text-xs font-semibold flex items-center gap-1.5 border border-foreground/10 transition-colors"
           >
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
             {copied ? 'Copied!' : 'Share Link'}
@@ -930,7 +930,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
 
           <button
             onClick={handleLeaveRoom}
-            className="px-4 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow transition-all"
+            className="px-4 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-foreground text-xs font-semibold flex items-center gap-1.5 shadow transition-all"
           >
             <LogOut className="w-3.5 h-3.5" />
             Leave Room
@@ -963,7 +963,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
             <div className="absolute top-4 right-4 z-30">
               <button
                 onClick={stopBroadcasting}
-                className="px-3.5 py-1.5 bg-red-600/90 hover:bg-red-600 text-white text-xs font-bold rounded-xl shadow-lg flex items-center gap-1.5 backdrop-blur-md transition-all border border-red-400/30"
+                className="px-3.5 py-1.5 bg-red-600/90 hover:bg-red-600 text-foreground text-xs font-bold rounded-xl shadow-lg flex items-center gap-1.5 backdrop-blur-md transition-all border border-red-400/30"
               >
                 <StopCircle className="w-4 h-4" />
                 Stop Sharing Screen
@@ -981,8 +981,8 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
                       <Youtube className="w-8 h-8" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-white">Watch a YouTube Video Together</h3>
-                      <p className="text-xs text-gray-400 mt-1">Paste a link — everyone's player stays in sync.</p>
+                      <h3 className="text-lg font-bold text-foreground">Watch a YouTube Video Together</h3>
+                      <p className="text-xs text-muted-foreground mt-1">Paste a link — everyone's player stays in sync.</p>
                     </div>
                     <div className="w-full flex items-center gap-2">
                       <input
@@ -990,7 +990,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
                         value={youtubeUrlInput}
                         onChange={(e) => setYoutubeUrlInput(e.target.value)}
                         placeholder="https://youtube.com/watch?v=..."
-                        className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-primary"
+                        className="flex-1 bg-foreground/5 border border-foreground/10 rounded-xl px-3.5 py-2.5 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary"
                       />
                       <button
                         onClick={() => {
@@ -998,7 +998,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
                           if (id) saveFavorite(id);
                         }}
                         title="Save to favorites"
-                        className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-amber-400 flex-shrink-0"
+                        className="p-2.5 rounded-xl bg-foreground/5 hover:bg-foreground/10 border border-foreground/10 text-amber-400 flex-shrink-0"
                       >
                         <Star className="w-4 h-4" />
                       </button>
@@ -1006,7 +1006,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
                     <div className="w-full flex items-center gap-2">
                       <button
                         onClick={submitLoadAndPlay}
-                        className="flex-1 py-3 bg-primary hover:bg-primary-hover text-white text-sm font-bold rounded-xl glow-button transition-all flex items-center justify-center gap-2"
+                        className="flex-1 py-3 bg-primary hover:bg-primary-hover text-foreground text-sm font-bold rounded-xl glow-button transition-all flex items-center justify-center gap-2"
                       >
                         <Youtube className="w-4 h-4" />
                         Load & Watch
@@ -1014,7 +1014,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
                       <button
                         onClick={() => submitAddToQueue()}
                         title="Add to queue instead of playing now"
-                        className="px-4 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-gray-200 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5"
+                        className="px-4 py-3 bg-foreground/5 hover:bg-foreground/10 border border-foreground/10 text-foreground text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5"
                       >
                         <Plus className="w-4 h-4" />
                         Queue
@@ -1022,13 +1022,13 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
                     </div>
                     {favoriteSources.length > 0 && (
                       <div className="w-full">
-                        <p className="text-[10px] uppercase font-bold text-gray-500 mb-1.5 text-left">Favorites</p>
+                        <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1.5 text-left">Favorites</p>
                         <div className="flex flex-wrap gap-1.5">
                           {favoriteSources.map((f) => (
                             <button
                               key={f.id}
                               onClick={() => setYoutubeUrlInput(f.youtubeId)}
-                              className="text-[11px] px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10"
+                              className="text-[11px] px-2 py-1 rounded-lg bg-foreground/5 hover:bg-foreground/10 text-muted-foreground border border-foreground/10"
                             >
                               {f.title || f.youtubeId}
                             </button>
@@ -1038,10 +1038,10 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
                     )}
                   </div>
                 ) : (
-                  <div className="glass-card p-8 rounded-2xl max-w-md border border-white/10 flex flex-col items-center gap-3">
-                    <Lock className="w-8 h-8 text-gray-400" />
-                    <h3 className="text-lg font-bold text-white">Waiting for the host</h3>
-                    <p className="text-xs text-gray-400">Playback is locked to host-only control right now.</p>
+                  <div className="glass-card p-8 rounded-2xl max-w-md border border-foreground/10 flex flex-col items-center gap-3">
+                    <Lock className="w-8 h-8 text-muted-foreground" />
+                    <h3 className="text-lg font-bold text-foreground">Waiting for the host</h3>
+                    <p className="text-xs text-muted-foreground">Playback is locked to host-only control right now.</p>
                   </div>
                 )
               ) : mediaSource === 'SCREEN_SHARE' ? (
@@ -1050,14 +1050,14 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
                     <Monitor className="w-8 h-8" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-white">Start Screen Broadcast</h3>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <h3 className="text-lg font-bold text-foreground">Start Screen Broadcast</h3>
+                    <p className="text-xs text-muted-foreground mt-1">
                       Share your screen, browser tab, or Netflix window with the room.
                     </p>
                   </div>
                   <button
                     onClick={startScreenShare}
-                    className="w-full py-3 bg-primary hover:bg-primary-hover text-white text-sm font-bold rounded-xl glow-button transition-all flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-primary hover:bg-primary-hover text-foreground text-sm font-bold rounded-xl glow-button transition-all flex items-center justify-center gap-2"
                   >
                     <Monitor className="w-4 h-4" />
                     Share My Screen
@@ -1069,8 +1069,8 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
                     <FileVideo className="w-8 h-8" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-white">Select Local Media File</h3>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <h3 className="text-lg font-bold text-foreground">Select Local Media File</h3>
+                    <p className="text-xs text-muted-foreground mt-1">
                       Choose an MP4/WebM video from your device to play locally for everyone.
                     </p>
                   </div>
@@ -1083,7 +1083,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
                   />
                   <button
                     onClick={() => localMediaFileRef.current?.click()}
-                    className="w-full py-3 bg-accent hover:bg-purple-600 text-white text-sm font-bold rounded-xl glow-button transition-all flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-accent hover:bg-purple-600 text-foreground text-sm font-bold rounded-xl glow-button transition-all flex items-center justify-center gap-2"
                   >
                     <FileVideo className="w-4 h-4" />
                     Pick Video File
@@ -1094,7 +1094,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
           )}
 
           {/* Floating Webcam Bubbles Overlay (Bottom-Left Corner per Layout A) */}
-          <div className="absolute bottom-4 left-4 z-20 flex items-center gap-3 max-w-full overflow-x-auto p-2 glass-panel rounded-2xl border border-white/10">
+          <div className="absolute bottom-4 left-4 z-20 flex items-center gap-3 max-w-full overflow-x-auto p-2 glass-panel rounded-2xl border border-foreground/10">
             {/* Local User Webcam */}
             <div className="relative w-28 h-20 bg-card rounded-xl overflow-hidden border border-primary/40 flex-shrink-0 shadow-lg">
               {cameraOn ? (
@@ -1106,23 +1106,23 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center bg-gray-900 text-gray-400">
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gray-900 text-muted-foreground">
                   <span className="font-bold text-sm text-indigo-300">You</span>
                 </div>
               )}
-              <div className="absolute bottom-1 left-1 bg-black/70 px-1.5 py-0.5 rounded text-[10px] font-semibold text-white">
+              <div className="absolute bottom-1 left-1 bg-black/70 px-1.5 py-0.5 rounded text-[10px] font-semibold text-foreground">
                 You
               </div>
               <div className="absolute top-1 right-1 flex items-center gap-1">
                 <button
                   onClick={toggleCamera}
-                  className={`p-1 rounded-full ${cameraOn ? 'bg-black/60 text-white' : 'bg-red-500 text-white'}`}
+                  className={`p-1 rounded-full ${cameraOn ? 'bg-black/60 text-foreground' : 'bg-red-500 text-foreground'}`}
                 >
                   {cameraOn ? <Video className="w-3 h-3" /> : <VideoOff className="w-3 h-3" />}
                 </button>
                 <button
                   onClick={toggleMic}
-                  className={`p-1 rounded-full ${micOn ? 'bg-black/60 text-white' : 'bg-red-500 text-white'}`}
+                  className={`p-1 rounded-full ${micOn ? 'bg-black/60 text-foreground' : 'bg-red-500 text-foreground'}`}
                 >
                   {micOn ? <Mic className="w-3 h-3" /> : <MicOff className="w-3 h-3" />}
                 </button>
@@ -1133,7 +1133,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
             {Object.keys(remoteStreams).map((peerId) => (
               <div
                 key={peerId}
-                className="relative w-28 h-20 bg-card rounded-xl overflow-hidden border border-white/20 flex-shrink-0 shadow-lg"
+                className="relative w-28 h-20 bg-card rounded-xl overflow-hidden border border-foreground/20 flex-shrink-0 shadow-lg"
               >
                 <video
                   ref={(el) => {
@@ -1143,7 +1143,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
                   playsInline
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute bottom-1 left-1 bg-black/70 px-1.5 py-0.5 rounded text-[10px] font-semibold text-white">
+                <div className="absolute bottom-1 left-1 bg-black/70 px-1.5 py-0.5 rounded text-[10px] font-semibold text-foreground">
                   Peer
                 </div>
               </div>
@@ -1158,7 +1158,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
             <button
               onClick={() => setSidebarTab('chat')}
               className={`flex-1 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                sidebarTab === 'chat' ? 'bg-primary text-white shadow' : 'text-gray-400 hover:text-white hover:bg-white/5'
+                sidebarTab === 'chat' ? 'bg-primary text-foreground shadow' : 'text-muted-foreground hover:text-foreground hover:bg-foreground/5'
               }`}
             >
               <MessageSquare className="w-3.5 h-3.5" />
@@ -1167,13 +1167,13 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
             <button
               onClick={() => setSidebarTab('queue')}
               className={`flex-1 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                sidebarTab === 'queue' ? 'bg-primary text-white shadow' : 'text-gray-400 hover:text-white hover:bg-white/5'
+                sidebarTab === 'queue' ? 'bg-primary text-foreground shadow' : 'text-muted-foreground hover:text-foreground hover:bg-foreground/5'
               }`}
             >
               <ListVideo className="w-3.5 h-3.5" />
               Queue {playlist.length > 0 && `(${playlist.length})`}
             </button>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-gray-300 font-mono whitespace-nowrap">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-foreground/10 text-muted-foreground font-mono whitespace-nowrap">
               {participants.length}/4
             </span>
           </div>
@@ -1187,12 +1187,12 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
                   <span className="font-semibold text-indigo-300">
                     {msg.sender?.displayName || 'User'}
                   </span>
-                  <span className="text-gray-500">
+                  <span className="text-muted-foreground">
                     {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
 
-                <div className="bg-white/5 p-2.5 rounded-xl border border-white/5 text-xs text-gray-200 relative group">
+                <div className="bg-foreground/5 p-2.5 rounded-xl border border-foreground/5 text-xs text-foreground relative group">
                   {isImageUrl(msg.content) ? (
                     <img src={msg.content} alt="GIF" className="max-w-full max-h-40 rounded-lg" />
                   ) : (
@@ -1216,7 +1216,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
                       {msg.reactions.map((r: any, idx: number) => (
                         <span
                           key={idx}
-                          className="text-[11px] bg-black/40 px-1.5 py-0.5 rounded-full border border-white/10"
+                          className="text-[11px] bg-foreground/10 px-1.5 py-0.5 rounded-full border border-foreground/10"
                         >
                           {r.emoji}
                         </span>
@@ -1227,14 +1227,14 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
                   {/* Quick Reaction Button */}
                   <button
                     onClick={() => setShowEmojiPicker(showEmojiPicker === msg.id ? null : msg.id)}
-                    className="absolute -top-2 right-2 opacity-0 group-hover:opacity-100 bg-card p-1 rounded-full text-gray-400 hover:text-amber-400 transition-opacity border border-white/10"
+                    className="absolute -top-2 right-2 opacity-0 group-hover:opacity-100 bg-card p-1 rounded-full text-muted-foreground hover:text-amber-400 transition-opacity border border-foreground/10"
                   >
                     <Smile className="w-3.5 h-3.5" />
                   </button>
 
                   {/* Emoji Picker Popup */}
                   {showEmojiPicker === msg.id && (
-                    <div className="absolute right-0 top-6 glass-panel p-1.5 rounded-xl flex gap-1 z-30 shadow-xl border border-white/10">
+                    <div className="absolute right-0 top-6 glass-panel p-1.5 rounded-xl flex gap-1 z-30 shadow-xl border border-foreground/10">
                       {['🔥', '❤️', '😂', '😮', '👏'].map((emoji) => (
                         <button
                           key={emoji}
@@ -1256,7 +1256,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
           {sidebarTab === 'queue' && (
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {playlist.length === 0 ? (
-                <p className="text-xs text-gray-500 text-center py-6">Nothing queued yet — add a YouTube link below.</p>
+                <p className="text-xs text-muted-foreground text-center py-6">Nothing queued yet — add a YouTube link below.</p>
               ) : (
                 playlist.map((item) => (
                   <div
@@ -1264,12 +1264,12 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
                     className={`p-2.5 rounded-xl border text-xs flex items-center justify-between gap-2 ${
                       item.status === 'PLAYING'
                         ? 'bg-primary/10 border-primary/30'
-                        : 'bg-white/5 border-white/5'
+                        : 'bg-foreground/5 border-foreground/5'
                     }`}
                   >
                     <div className="min-w-0">
-                      <div className="font-semibold text-white truncate">{item.title || item.youtubeId}</div>
-                      <div className="text-gray-500 text-[10px]">
+                      <div className="font-semibold text-foreground truncate">{item.title || item.youtubeId}</div>
+                      <div className="text-muted-foreground text-[10px]">
                         {item.status === 'PLAYING' ? '▶ Now playing' : 'Queued'} · added by {item.addedBy?.displayName || 'someone'}
                       </div>
                     </div>
@@ -1302,19 +1302,19 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
           {/* GIF popup */}
           {gifTargetOpen && (
             <div className="px-3 pb-2">
-              <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl p-2">
+              <div className="flex items-center gap-2 bg-foreground/5 border border-foreground/10 rounded-xl p-2">
                 <input
                   type="text"
                   value={gifUrlInput}
                   onChange={(e) => setGifUrlInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && sendGif(gifUrlInput)}
                   placeholder="Paste a GIF/image URL..."
-                  className="flex-1 bg-transparent text-xs text-white placeholder-gray-500 focus:outline-none"
+                  className="flex-1 bg-transparent text-xs text-foreground placeholder-muted-foreground focus:outline-none"
                 />
                 <button onClick={() => sendGif(gifUrlInput)} className="text-primary">
                   <Send className="w-3.5 h-3.5" />
                 </button>
-                <button onClick={() => setGifTargetOpen(false)} className="text-gray-500">
+                <button onClick={() => setGifTargetOpen(false)} className="text-muted-foreground">
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -1331,11 +1331,11 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
                   onChange={(e) => setYoutubeUrlInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && submitAddToQueue()}
                   placeholder="Paste a YouTube link to queue..."
-                  className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-primary"
+                  className="flex-1 bg-foreground/5 border border-foreground/10 rounded-xl px-3.5 py-2 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary"
                 />
                 <button
                   onClick={() => submitAddToQueue()}
-                  className="p-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white shadow transition-all"
+                  className="p-2.5 rounded-xl bg-primary hover:bg-primary-hover text-foreground shadow transition-all"
                   title="Add to queue"
                 >
                   <Plus className="w-3.5 h-3.5" />
@@ -1345,7 +1345,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setGifTargetOpen(!gifTargetOpen)}
-                  className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 transition-colors flex-shrink-0"
+                  className="p-2.5 rounded-xl bg-foreground/5 hover:bg-foreground/10 text-muted-foreground border border-foreground/10 transition-colors flex-shrink-0"
                   title="Send a GIF"
                 >
                   <ImageIcon className="w-3.5 h-3.5" />
@@ -1356,11 +1356,11 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                   placeholder="Send reaction or comment..."
-                  className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-primary"
+                  className="flex-1 bg-foreground/5 border border-foreground/10 rounded-xl px-3.5 py-2 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary"
                 />
                 <button
                   onClick={handleSendMessage}
-                  className="p-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white shadow transition-all"
+                  className="p-2.5 rounded-xl bg-primary hover:bg-primary-hover text-foreground shadow transition-all"
                 >
                   <Send className="w-3.5 h-3.5" />
                 </button>
@@ -1374,23 +1374,23 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
       {showInviteModal && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
           <div className="glass-panel w-full max-w-md p-6 rounded-2xl border border-border">
-            <h3 className="text-lg font-bold text-white mb-4">Invite Friend to Watch</h3>
+            <h3 className="text-lg font-bold text-foreground mb-4">Invite Friend to Watch</h3>
             <div className="space-y-3 max-h-60 overflow-y-auto mb-6">
               {contacts.length === 0 ? (
-                <p className="text-xs text-gray-400">No accepted contacts found. Add contacts first!</p>
+                <p className="text-xs text-muted-foreground">No accepted contacts found. Add contacts first!</p>
               ) : (
                 contacts.map((c) => (
                   <div
                     key={c.id}
-                    className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5"
+                    className="flex items-center justify-between p-3 rounded-xl bg-foreground/5 border border-foreground/5"
                   >
                     <div className="flex items-center gap-3">
                       <img src={c.avatarUrl} alt="" className="w-8 h-8 rounded-full" />
-                      <span className="text-xs font-semibold text-white">{c.displayName}</span>
+                      <span className="text-xs font-semibold text-foreground">{c.displayName}</span>
                     </div>
                     <button
                       onClick={() => sendBuddyInvite(c.id)}
-                      className="px-3 py-1.5 bg-primary text-white text-xs font-semibold rounded-lg glow-button"
+                      className="px-3 py-1.5 bg-primary text-foreground text-xs font-semibold rounded-lg glow-button"
                     >
                       Send Invite
                     </button>
@@ -1400,7 +1400,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
             </div>
             <button
               onClick={() => setShowInviteModal(false)}
-              className="w-full py-2 bg-white/10 hover:bg-white/20 text-xs font-semibold text-white rounded-xl"
+              className="w-full py-2 bg-foreground/10 hover:bg-foreground/20 text-xs font-semibold text-foreground rounded-xl"
             >
               Close
             </button>
@@ -1412,27 +1412,27 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
       {showReportModal && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
           <div className="glass-panel w-full max-w-md p-6 rounded-2xl border border-red-500/30">
-            <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+            <h3 className="text-lg font-bold text-foreground mb-2 flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-red-400" />
               File Safety Report
             </h3>
-            <p className="text-xs text-gray-400 mb-4">
+            <p className="text-xs text-muted-foreground mb-4">
               Reports are confidentially submitted directly to Super Admin moderators.
             </p>
 
             <div className="space-y-4">
               <div>
-                <label className="text-xs font-semibold text-gray-300 block mb-1">Target Participant</label>
+                <label className="text-xs font-semibold text-muted-foreground block mb-1">Target Participant</label>
                 <select
                   value={reportTargetId}
                   onChange={(e) => setReportTargetId(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl p-2 text-xs text-white"
+                  className="w-full bg-foreground/5 border border-foreground/10 rounded-xl p-2 text-xs text-foreground"
                 >
-                  <option value="">Select participant...</option>
+                  <option className="bg-card text-foreground" value="">Select participant...</option>
                   {participants
                     .filter((p) => p.userId !== currentUser.id)
                     .map((p) => (
-                      <option key={p.userId} value={p.userId}>
+                      <option key={p.userId} className="bg-card text-foreground" value={p.userId}>
                         {p.user?.displayName || p.userId}
                       </option>
                     ))}
@@ -1440,26 +1440,26 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-gray-300 block mb-1">Reason</label>
+                <label className="text-xs font-semibold text-muted-foreground block mb-1">Reason</label>
                 <select
                   value={reportReason}
                   onChange={(e) => setReportReason(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl p-2 text-xs text-white"
+                  className="w-full bg-foreground/5 border border-foreground/10 rounded-xl p-2 text-xs text-foreground"
                 >
-                  <option value="HARASSMENT">Harassment or Hate Speech</option>
-                  <option value="INAPPROPRIATE_CONTENT">Inappropriate Content</option>
-                  <option value="SPAM">Spam or Abuse</option>
-                  <option value="OTHER">Other</option>
+                  <option className="bg-card text-foreground" value="HARASSMENT">Harassment or Hate Speech</option>
+                  <option className="bg-card text-foreground" value="INAPPROPRIATE_CONTENT">Inappropriate Content</option>
+                  <option className="bg-card text-foreground" value="SPAM">Spam or Abuse</option>
+                  <option className="bg-card text-foreground" value="OTHER">Other</option>
                 </select>
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-gray-300 block mb-1">Details</label>
+                <label className="text-xs font-semibold text-muted-foreground block mb-1">Details</label>
                 <textarea
                   value={reportDetails}
                   onChange={(e) => setReportDetails(e.target.value)}
                   placeholder="Describe what happened..."
-                  className="w-full bg-white/5 border border-white/10 rounded-xl p-2 text-xs text-white h-20"
+                  className="w-full bg-foreground/5 border border-foreground/10 rounded-xl p-2 text-xs text-foreground h-20"
                 />
               </div>
             </div>
@@ -1467,13 +1467,13 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
             <div className="flex items-center gap-3 mt-6">
               <button
                 onClick={() => setShowReportModal(false)}
-                className="flex-1 py-2 bg-white/10 hover:bg-white/20 text-xs font-semibold text-white rounded-xl"
+                className="flex-1 py-2 bg-foreground/10 hover:bg-foreground/20 text-xs font-semibold text-foreground rounded-xl"
               >
                 Cancel
               </button>
               <button
                 onClick={submitReport}
-                className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-xs font-bold text-white rounded-xl shadow"
+                className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-xs font-bold text-foreground rounded-xl shadow"
               >
                 Submit Report
               </button>
@@ -1489,8 +1489,8 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
             <div className="w-12 h-12 rounded-full bg-primary/20 text-primary flex items-center justify-center mx-auto mb-3">
               <Sparkles className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-bold text-white">Rate Watch Experience</h3>
-            <p className="text-xs text-gray-400 mt-1 mb-4">How was your session with your watch buddies?</p>
+            <h3 className="text-lg font-bold text-foreground">Rate Watch Experience</h3>
+            <p className="text-xs text-muted-foreground mt-1 mb-4">How was your session with your watch buddies?</p>
 
             <div className="flex justify-center gap-2 mb-4">
               {[1, 2, 3, 4, 5].map((star) => (
@@ -1501,7 +1501,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
                 >
                   <Star
                     className={`w-6 h-6 ${
-                      star <= reviewRating ? 'fill-amber-400 text-amber-400' : 'text-gray-600'
+                      star <= reviewRating ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground'
                     }`}
                   />
                 </button>
@@ -1512,12 +1512,12 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
               value={reviewComment}
               onChange={(e) => setReviewComment(e.target.value)}
               placeholder="Add optional comment..."
-              className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-xs text-white h-16 mb-4"
+              className="w-full bg-foreground/5 border border-foreground/10 rounded-xl p-2.5 text-xs text-foreground h-16 mb-4"
             />
 
             <button
               onClick={submitReview}
-              className="w-full py-2.5 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl glow-button"
+              className="w-full py-2.5 bg-primary hover:bg-primary-hover text-foreground text-xs font-bold rounded-xl glow-button"
             >
               Done & Return Dashboard
             </button>

@@ -53,13 +53,13 @@ export default function LobbyPage() {
             <Compass className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white">Public Lobby</h1>
-            <p className="text-xs text-gray-400">Open rooms anyone can drop into — no invite needed.</p>
+            <h1 className="text-xl font-bold text-foreground">Public Lobby</h1>
+            <p className="text-xs text-muted-foreground">Open rooms anyone can drop into — no invite needed.</p>
           </div>
         </div>
         <button
           onClick={fetchPublicRooms}
-          className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 transition-colors"
+          className="p-2.5 rounded-xl bg-foreground/5 hover:bg-foreground/10 border border-foreground/10 text-muted-foreground transition-colors"
           title="Refresh"
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -67,12 +67,12 @@ export default function LobbyPage() {
       </div>
 
       {lobbyDisabled ? (
-        <div className="glass-panel p-10 rounded-2xl text-center border border-white/5">
-          <p className="text-sm text-gray-400">The public lobby is currently disabled by the site admin.</p>
+        <div className="glass-panel p-10 rounded-2xl text-center border border-foreground/5">
+          <p className="text-sm text-muted-foreground">The public lobby is currently disabled by the site admin.</p>
         </div>
       ) : rooms.length === 0 ? (
-        <div className="glass-panel p-10 rounded-2xl text-center border border-white/5 space-y-2">
-          <p className="text-sm text-gray-400">No public rooms open right now.</p>
+        <div className="glass-panel p-10 rounded-2xl text-center border border-foreground/5 space-y-2">
+          <p className="text-sm text-muted-foreground">No public rooms open right now.</p>
           <Link href="/dashboard" className="text-primary text-xs font-semibold hover:underline">
             Start one from your dashboard and toggle "Make it public"
           </Link>
@@ -85,7 +85,7 @@ export default function LobbyPage() {
             return (
               <div
                 key={r.id}
-                className="glass-panel p-5 rounded-2xl border border-white/10 hover:border-primary/40 transition-colors flex flex-col justify-between"
+                className="glass-panel p-5 rounded-2xl border border-foreground/10 hover:border-primary/40 transition-colors flex flex-col justify-between"
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -93,13 +93,13 @@ export default function LobbyPage() {
                       <Icon className="w-3 h-3" />
                       {SOURCE_LABEL[r.mediaSource] || r.mediaSource}
                     </span>
-                    <span className={`text-xs ${full ? 'text-red-400' : 'text-gray-400'}`}>
+                    <span className={`text-xs ${full ? 'text-red-400' : 'text-muted-foreground'}`}>
                       {r.participants.length}/4 {full ? '(Full)' : ''}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <img src={r.host.avatarUrl} alt="" className="w-7 h-7 rounded-full" />
-                    <h3 className="font-bold text-white text-sm">{r.host.displayName}'s room</h3>
+                    <h3 className="font-bold text-foreground text-sm">{r.host.displayName}'s room</h3>
                   </div>
                 </div>
 
@@ -108,8 +108,8 @@ export default function LobbyPage() {
                   aria-disabled={full}
                   className={`mt-4 w-full py-2 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-colors ${
                     full
-                      ? 'bg-white/5 text-gray-500 cursor-not-allowed pointer-events-none'
-                      : 'bg-white/10 hover:bg-primary text-white'
+                      ? 'bg-foreground/5 text-muted-foreground cursor-not-allowed pointer-events-none'
+                      : 'bg-foreground/10 hover:bg-primary text-foreground'
                   }`}
                 >
                   <Play className="w-3.5 h-3.5 fill-current" />

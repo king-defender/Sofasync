@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { Tv, Bell, Shield, LogOut, User as UserIcon, Sparkles, Users, Compass } from 'lucide-react';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export default function Navbar() {
   const router = useRouter();
@@ -68,10 +69,10 @@ export default function Navbar() {
       {/* Brand Logo */}
       <Link href="/" className="flex items-center gap-2.5 group">
         <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-accent flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-          <Tv className="w-5 h-5 text-white" />
+          <Tv className="w-5 h-5 text-foreground" />
         </div>
         <div>
-          <span className="font-bold text-xl tracking-tight bg-gradient-to-r from-white via-indigo-200 to-indigo-400 bg-clip-text text-transparent">
+          <span className="font-bold text-xl tracking-tight bg-gradient-to-r from-gray-900 via-indigo-700 to-indigo-500 dark:from-white dark:via-indigo-200 dark:to-indigo-400 bg-clip-text text-transparent">
             SofaSync
           </span>
           <span className="text-[10px] block font-semibold text-primary tracking-widest uppercase -mt-1">
@@ -86,14 +87,14 @@ export default function Navbar() {
           <>
             <Link
               href="/dashboard"
-              className="text-sm font-medium text-gray-300 hover:text-white transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-white/5"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-foreground/5"
             >
               Dashboard
             </Link>
 
             <Link
               href="/matchmaking"
-              className="text-sm font-medium text-indigo-300 hover:text-white transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 border border-primary/30"
+              className="text-sm font-medium text-indigo-300 hover:text-foreground transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 border border-primary/30"
             >
               <Sparkles className="w-4 h-4 text-primary" />
               Find Buddy
@@ -101,7 +102,7 @@ export default function Navbar() {
 
             <Link
               href="/lobby"
-              className="text-sm font-medium text-gray-300 hover:text-white transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-white/5"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-foreground/5"
             >
               <Compass className="w-4 h-4" />
               Lobby
@@ -121,11 +122,11 @@ export default function Navbar() {
             <div className="relative">
               <button
                 onClick={markRead}
-                className="p-2 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 relative transition-colors"
+                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-foreground/5 relative transition-colors"
               >
                 <Bell className="w-5 h-5" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 w-4 h-4 bg-secondary text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
+                  <span className="absolute top-1 right-1 w-4 h-4 bg-secondary text-foreground text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
                     {unreadCount}
                   </span>
                 )}
@@ -134,17 +135,17 @@ export default function Navbar() {
               {/* Notification Popup */}
               {showNotifs && (
                 <div className="absolute right-0 mt-2 w-80 glass-panel rounded-xl shadow-2xl p-4 border border-border z-50">
-                  <h4 className="text-xs font-semibold uppercase text-gray-400 mb-3 tracking-wider">
+                  <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-3 tracking-wider">
                     Notifications
                   </h4>
                   <div className="space-y-2 max-h-64 overflow-y-auto">
                     {notifications.length === 0 ? (
-                      <p className="text-xs text-gray-500 py-2">No new notifications</p>
+                      <p className="text-xs text-muted-foreground py-2">No new notifications</p>
                     ) : (
                       notifications.map((n) => (
                         <div
                           key={n.id}
-                          className="text-xs p-2.5 rounded-lg bg-white/5 border border-white/5 flex flex-col gap-1"
+                          className="text-xs p-2.5 rounded-lg bg-foreground/5 border border-foreground/5 flex flex-col gap-1"
                         >
                           <span className="font-semibold text-indigo-300">
                             {n.type === 'BUDDY_REQUEST'
@@ -155,7 +156,7 @@ export default function Navbar() {
                               ? '🎉 Invite Accepted!'
                               : 'Notification'}
                           </span>
-                          <p className="text-gray-300">
+                          <p className="text-muted-foreground">
                             {n.payload?.senderName
                               ? `${n.payload.senderName} invited you to watch!`
                               : n.payload?.badgeName
@@ -179,18 +180,18 @@ export default function Navbar() {
             </div>
 
             {/* Profile Pill */}
-            <div className="flex items-center gap-3 pl-2 border-l border-white/10">
+            <div className="flex items-center gap-3 pl-2 border-l border-foreground/10">
               <img
                 src={user.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.displayName}`}
                 alt={user.displayName}
                 className="w-8 h-8 rounded-full border border-primary/50 object-cover"
               />
-              <span className="text-sm font-semibold text-gray-200 hidden md:inline">
+              <span className="text-sm font-semibold text-foreground hidden md:inline">
                 {user.displayName}
               </span>
               <button
                 onClick={handleLogout}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors"
                 title="Logout"
               >
                 <LogOut className="w-4 h-4" />
@@ -201,18 +202,20 @@ export default function Navbar() {
           <div className="flex items-center gap-3">
             <Link
               href="/login"
-              className="text-sm font-semibold text-gray-300 hover:text-white px-4 py-2 rounded-lg hover:bg-white/5 transition-colors"
+              className="text-sm font-semibold text-muted-foreground hover:text-foreground px-4 py-2 rounded-lg hover:bg-foreground/5 transition-colors"
             >
               Sign In
             </Link>
             <Link
               href="/signup"
-              className="text-sm font-semibold text-white bg-primary hover:bg-primary-hover px-4 py-2 rounded-lg glow-button transition-all"
+              className="text-sm font-semibold text-foreground bg-primary hover:bg-primary-hover px-4 py-2 rounded-lg glow-button transition-all"
             >
               Get Started
             </Link>
           </div>
         )}
+
+        <ThemeToggle />
       </nav>
     </header>
   );

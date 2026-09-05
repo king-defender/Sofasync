@@ -9,10 +9,17 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: '#090a0f',
-        foreground: '#f3f4f6',
-        card: '#12141d',
-        'card-foreground': '#f3f4f6',
+        // rgb(var(--x) / <alpha-value>) - the CSS variables themselves flip
+        // between :root (light) and .dark in globals.css, so every class
+        // using these tokens (bg-background, text-foreground, bg-card, etc.)
+        // automatically re-themes; the brand colors (primary/secondary/accent)
+        // deliberately stay identical in both themes.
+        background: 'rgb(var(--background) / <alpha-value>)',
+        foreground: 'rgb(var(--foreground) / <alpha-value>)',
+        card: {
+          DEFAULT: 'rgb(var(--card) / <alpha-value>)',
+          foreground: 'rgb(var(--card-foreground) / <alpha-value>)',
+        },
         primary: {
           DEFAULT: '#6366f1',
           foreground: '#ffffff',
@@ -27,10 +34,10 @@ module.exports = {
           foreground: '#ffffff',
         },
         muted: {
-          DEFAULT: '#1f2937',
-          foreground: '#9ca3af',
+          DEFAULT: 'rgb(var(--muted) / <alpha-value>)',
+          foreground: 'rgb(var(--muted-foreground) / <alpha-value>)',
         },
-        border: '#1f293d',
+        border: 'rgb(var(--border) / <alpha-value>)',
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],

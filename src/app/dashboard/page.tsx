@@ -116,7 +116,7 @@ export default function DashboardPage() {
 
   if (!user) {
     return (
-      <div className="min-h-[calc(100vh-65px)] flex items-center justify-center text-gray-400 text-sm">
+      <div className="min-h-[calc(100vh-65px)] flex items-center justify-center text-muted-foreground text-sm">
         Loading dashboard...
       </div>
     );
@@ -130,21 +130,21 @@ export default function DashboardPage() {
           <div className="flex items-center gap-3">
             <img src={user.avatarUrl} alt="" className="w-12 h-12 rounded-full border-2 border-primary" />
             <div>
-              <h1 className="text-2xl md:text-3xl font-extrabold text-white">
+              <h1 className="text-2xl md:text-3xl font-extrabold text-foreground">
                 Welcome back, {user.displayName}!
               </h1>
-              <p className="text-xs text-gray-400">Ready for your next watch session?</p>
+              <p className="text-xs text-muted-foreground">Ready for your next watch session?</p>
             </div>
           </div>
         </div>
 
         {/* Quick Launch Actions */}
         <div className="flex flex-wrap items-center gap-3 z-10 w-full md:w-auto">
-          <div className="flex items-center bg-white/5 p-1 rounded-2xl border border-white/10">
+          <div className="flex items-center bg-foreground/5 p-1 rounded-2xl border border-foreground/10">
             <button
               onClick={() => setSelectedSource('SCREEN_SHARE')}
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                selectedSource === 'SCREEN_SHARE' ? 'bg-primary text-white shadow' : 'text-gray-400'
+                selectedSource === 'SCREEN_SHARE' ? 'bg-primary text-foreground shadow' : 'text-muted-foreground'
               }`}
             >
               <Monitor className="w-3.5 h-3.5" />
@@ -153,7 +153,7 @@ export default function DashboardPage() {
             <button
               onClick={() => setSelectedSource('LOCAL_FILE')}
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                selectedSource === 'LOCAL_FILE' ? 'bg-primary text-white shadow' : 'text-gray-400'
+                selectedSource === 'LOCAL_FILE' ? 'bg-primary text-foreground shadow' : 'text-muted-foreground'
               }`}
             >
               <FileVideo className="w-3.5 h-3.5" />
@@ -162,7 +162,7 @@ export default function DashboardPage() {
             <button
               onClick={() => setSelectedSource('YOUTUBE')}
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                selectedSource === 'YOUTUBE' ? 'bg-primary text-white shadow' : 'text-gray-400'
+                selectedSource === 'YOUTUBE' ? 'bg-primary text-foreground shadow' : 'text-muted-foreground'
               }`}
             >
               <Youtube className="w-3.5 h-3.5" />
@@ -177,7 +177,7 @@ export default function DashboardPage() {
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border transition-all ${
               makePublic
                 ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300'
-                : 'bg-white/5 border-white/10 text-gray-400'
+                : 'bg-foreground/5 border-foreground/10 text-muted-foreground'
             }`}
           >
             <Globe className="w-3.5 h-3.5" />
@@ -187,7 +187,7 @@ export default function DashboardPage() {
           <button
             onClick={handleCreateRoom}
             disabled={creatingRoom}
-            className="px-6 py-3 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-2xl glow-button transition-all flex items-center gap-2"
+            className="px-6 py-3 bg-primary hover:bg-primary-hover text-foreground text-xs font-bold rounded-2xl glow-button transition-all flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             {creatingRoom ? 'Launching...' : 'Create Watch Room'}
@@ -207,15 +207,15 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Active Rooms (cols 1-8) */}
         <div className="lg:col-span-8 space-y-6">
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
+          <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
             <Tv className="w-5 h-5 text-primary" />
             Live Watch Rooms
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {activeRooms.length === 0 ? (
-              <div className="col-span-2 glass-panel p-8 rounded-2xl text-center border border-white/5 space-y-3">
-                <p className="text-sm text-gray-400">No active rooms right now.</p>
+              <div className="col-span-2 glass-panel p-8 rounded-2xl text-center border border-foreground/5 space-y-3">
+                <p className="text-sm text-muted-foreground">No active rooms right now.</p>
                 <button
                   onClick={handleCreateRoom}
                   className="px-4 py-2 bg-primary/20 text-primary text-xs font-bold rounded-xl hover:bg-primary/30 transition-colors"
@@ -227,7 +227,7 @@ export default function DashboardPage() {
               activeRooms.map((r) => (
                 <div
                   key={r.id}
-                  className="glass-panel p-5 rounded-2xl border border-white/10 hover:border-primary/40 transition-colors flex flex-col justify-between"
+                  className="glass-panel p-5 rounded-2xl border border-foreground/10 hover:border-primary/40 transition-colors flex flex-col justify-between"
                 >
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -238,16 +238,16 @@ export default function DashboardPage() {
                           ? 'YouTube'
                           : 'Local File'}
                       </span>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-muted-foreground">
                         {r.participants.length}/4 Users
                       </span>
                     </div>
-                    <h3 className="font-bold text-white text-sm">Host: {r.host.displayName}</h3>
+                    <h3 className="font-bold text-foreground text-sm">Host: {r.host.displayName}</h3>
                   </div>
 
                   <Link
                     href={`/room/${r.id}`}
-                    className="mt-4 w-full py-2 bg-white/10 hover:bg-primary text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-colors"
+                    className="mt-4 w-full py-2 bg-foreground/10 hover:bg-primary text-foreground text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-colors"
                   >
                     <Play className="w-3.5 h-3.5 fill-current" />
                     Join Room
@@ -259,7 +259,7 @@ export default function DashboardPage() {
 
           {/* Badges Section */}
           <div className="pt-4 space-y-4">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+            <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
               <Award className="w-5 h-5 text-amber-400" />
               Earned Badges ({user.badges?.length || 0})
             </h2>
@@ -272,8 +272,8 @@ export default function DashboardPage() {
                 >
                   <span className="text-2xl">{ub.badge.iconUrl || '🏆'}</span>
                   <div>
-                    <h4 className="text-xs font-bold text-white">{ub.badge.name}</h4>
-                    <p className="text-[10px] text-gray-400">{ub.badge.description}</p>
+                    <h4 className="text-xs font-bold text-foreground">{ub.badge.name}</h4>
+                    <p className="text-[10px] text-muted-foreground">{ub.badge.description}</p>
                   </div>
                 </div>
               ))}
@@ -283,36 +283,36 @@ export default function DashboardPage() {
 
         {/* Right Column: Contacts & Add Friends (cols 9-12) */}
         <div className="lg:col-span-4 space-y-6">
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
+          <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
             <Users className="w-5 h-5 text-accent" />
             Watch Buddies ({contacts.length})
           </h2>
 
           {/* Search Users Input */}
           <div className="relative">
-            <Search className="w-4 h-4 text-gray-500 absolute left-3.5 top-3" />
+            <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-3" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => handleSearchUsers(e.target.value)}
               placeholder="Search user to add contact..."
-              className="w-full bg-white/5 border border-white/10 rounded-2xl pl-10 pr-4 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-accent"
+              className="w-full bg-foreground/5 border border-foreground/10 rounded-2xl pl-10 pr-4 py-2 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-accent"
             />
           </div>
 
           {/* Search Results Dropdown */}
           {searchResults.length > 0 && (
             <div className="glass-panel rounded-2xl p-3 space-y-2 border border-accent/30">
-              <h4 className="text-[10px] uppercase font-bold text-gray-400 px-1">Search Results</h4>
+              <h4 className="text-[10px] uppercase font-bold text-muted-foreground px-1">Search Results</h4>
               {searchResults.map((u) => (
-                <div key={u.id} className="flex items-center justify-between p-2 rounded-xl bg-white/5">
+                <div key={u.id} className="flex items-center justify-between p-2 rounded-xl bg-foreground/5">
                   <div className="flex items-center gap-2">
                     <img src={u.avatarUrl} alt="" className="w-7 h-7 rounded-full" />
-                    <span className="text-xs font-semibold text-white">{u.displayName}</span>
+                    <span className="text-xs font-semibold text-foreground">{u.displayName}</span>
                   </div>
                   <button
                     onClick={() => addContact(u.id)}
-                    className="p-1.5 rounded-lg bg-accent text-white hover:bg-accent/80 transition-colors"
+                    className="p-1.5 rounded-lg bg-accent text-foreground hover:bg-accent/80 transition-colors"
                   >
                     <UserPlus className="w-3.5 h-3.5" />
                   </button>
@@ -322,19 +322,19 @@ export default function DashboardPage() {
           )}
 
           {/* Contacts List */}
-          <div className="glass-panel rounded-2xl p-4 space-y-3 border border-white/5 max-h-80 overflow-y-auto">
+          <div className="glass-panel rounded-2xl p-4 space-y-3 border border-foreground/5 max-h-80 overflow-y-auto">
             {contacts.length === 0 ? (
-              <p className="text-xs text-gray-500 text-center py-4">No contacts added yet</p>
+              <p className="text-xs text-muted-foreground text-center py-4">No contacts added yet</p>
             ) : (
               contacts.map((c) => (
                 <div
                   key={c.contactId}
-                  className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
+                  className="flex items-center justify-between p-2.5 rounded-xl bg-foreground/5 hover:bg-foreground/10 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <img src={c.avatarUrl} alt="" className="w-8 h-8 rounded-full border border-white/10" />
+                    <img src={c.avatarUrl} alt="" className="w-8 h-8 rounded-full border border-foreground/10" />
                     <div>
-                      <h4 className="text-xs font-bold text-white">{c.displayName}</h4>
+                      <h4 className="text-xs font-bold text-foreground">{c.displayName}</h4>
                       <span className="text-[10px] text-emerald-400">Ready to watch</span>
                     </div>
                   </div>

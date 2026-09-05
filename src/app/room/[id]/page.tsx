@@ -41,7 +41,7 @@ export default function RoomPage({ params }: { params: { id: string } }) {
 
   if (loading || !currentUser) {
     return (
-      <div className="min-h-[calc(100vh-65px)] flex items-center justify-center text-gray-400 text-sm">
+      <div className="min-h-[calc(100vh-65px)] flex items-center justify-center text-muted-foreground text-sm">
         Connecting to watch room...
       </div>
     );

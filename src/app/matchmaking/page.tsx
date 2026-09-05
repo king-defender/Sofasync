@@ -108,10 +108,10 @@ export default function MatchmakingPage() {
         {/* Header */}
         <div className="text-center space-y-2">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-primary to-accent flex items-center justify-center mx-auto mb-2 shadow-lg">
-            <Sparkles className="w-7 h-7 text-white" />
+            <Sparkles className="w-7 h-7 text-foreground" />
           </div>
-          <h1 className="text-3xl font-extrabold text-white">Find a Watch Buddy</h1>
-          <p className="text-xs text-gray-400 max-w-md mx-auto">
+          <h1 className="text-3xl font-extrabold text-foreground">Find a Watch Buddy</h1>
+          <p className="text-xs text-muted-foreground max-w-md mx-auto">
             Get paired with someone who wants to watch compatible content in real time.
           </p>
         </div>
@@ -128,8 +128,8 @@ export default function MatchmakingPage() {
             </div>
 
             <div>
-              <h3 className="text-lg font-bold text-white">Scanning for Compatible Buddy...</h3>
-              <p className="text-xs text-gray-400 mt-1">Queue Time: {formatTimer(queueTime)}</p>
+              <h3 className="text-lg font-bold text-foreground">Scanning for Compatible Buddy...</h3>
+              <p className="text-xs text-muted-foreground mt-1">Queue Time: {formatTimer(queueTime)}</p>
             </div>
 
             <button
@@ -146,48 +146,48 @@ export default function MatchmakingPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Genre Selection */}
               <div>
-                <label className="text-xs font-semibold text-gray-300 block mb-1.5 flex items-center gap-1.5">
+                <label className="text-xs font-semibold text-muted-foreground block mb-1.5 flex items-center gap-1.5">
                   <Film className="w-4 h-4 text-primary" />
                   Preferred Genre
                 </label>
                 <select
                   value={genre}
                   onChange={(e) => setGenre(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-white focus:border-primary"
+                  className="w-full bg-foreground/5 border border-foreground/10 rounded-xl p-3 text-xs text-foreground focus:border-primary"
                 >
-                  <option value="">Any Genre (No preference)</option>
-                  <option value="Action">Action & Sci-Fi</option>
-                  <option value="Comedy">Comedy</option>
-                  <option value="Drama">Drama</option>
-                  <option value="Horror">Horror & Thriller</option>
-                  <option value="Anime">Anime</option>
-                  <option value="Documentary">Documentary</option>
+                  <option className="bg-card text-foreground" value="">Any Genre (No preference)</option>
+                  <option className="bg-card text-foreground" value="Action">Action & Sci-Fi</option>
+                  <option className="bg-card text-foreground" value="Comedy">Comedy</option>
+                  <option className="bg-card text-foreground" value="Drama">Drama</option>
+                  <option className="bg-card text-foreground" value="Horror">Horror & Thriller</option>
+                  <option className="bg-card text-foreground" value="Anime">Anime</option>
+                  <option className="bg-card text-foreground" value="Documentary">Documentary</option>
                 </select>
               </div>
 
               {/* Language Selection */}
               <div>
-                <label className="text-xs font-semibold text-gray-300 block mb-1.5 flex items-center gap-1.5">
+                <label className="text-xs font-semibold text-muted-foreground block mb-1.5 flex items-center gap-1.5">
                   <Globe className="w-4 h-4 text-accent" />
                   Language
                 </label>
                 <select
                   value={language}
                   onChange={(e) => setLanguage(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-white focus:border-accent"
+                  className="w-full bg-foreground/5 border border-foreground/10 rounded-xl p-3 text-xs text-foreground focus:border-accent"
                 >
-                  <option value="">Any Language</option>
-                  <option value="English">English</option>
-                  <option value="Hindi">Hindi</option>
-                  <option value="Spanish">Spanish</option>
-                  <option value="French">French</option>
-                  <option value="Japanese">Japanese</option>
+                  <option className="bg-card text-foreground" value="">Any Language</option>
+                  <option className="bg-card text-foreground" value="English">English</option>
+                  <option className="bg-card text-foreground" value="Hindi">Hindi</option>
+                  <option className="bg-card text-foreground" value="Spanish">Spanish</option>
+                  <option className="bg-card text-foreground" value="French">French</option>
+                  <option className="bg-card text-foreground" value="Japanese">Japanese</option>
                 </select>
               </div>
 
               {/* Camera Preference */}
               <div>
-                <label className="text-xs font-semibold text-gray-300 block mb-1.5 flex items-center gap-1.5">
+                <label className="text-xs font-semibold text-muted-foreground block mb-1.5 flex items-center gap-1.5">
                   <Video className="w-4 h-4 text-emerald-400" />
                   Webcam Preference
                 </label>
@@ -196,7 +196,7 @@ export default function MatchmakingPage() {
                   className={`w-full p-3 rounded-xl text-xs font-semibold flex items-center justify-between border transition-all ${
                     cameraPref
                       ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300'
-                      : 'bg-white/5 border-white/10 text-gray-400'
+                      : 'bg-foreground/5 border-foreground/10 text-muted-foreground'
                   }`}
                 >
                   <span>{cameraPref ? 'Camera On Recommended' : 'Camera Optional'}</span>
@@ -206,7 +206,7 @@ export default function MatchmakingPage() {
 
               {/* Age Range */}
               <div>
-                <label className="text-xs font-semibold text-gray-300 block mb-1.5">
+                <label className="text-xs font-semibold text-muted-foreground block mb-1.5">
                   Age Range ({ageRangeMin} - {ageRangeMax})
                 </label>
                 <div className="flex items-center gap-3 pt-2">
@@ -232,7 +232,7 @@ export default function MatchmakingPage() {
 
             <button
               onClick={joinQueue}
-              className="w-full py-4 bg-primary hover:bg-primary-hover text-white text-sm font-bold rounded-2xl glow-button transition-all flex items-center justify-center gap-2"
+              className="w-full py-4 bg-primary hover:bg-primary-hover text-foreground text-sm font-bold rounded-2xl glow-button transition-all flex items-center justify-center gap-2"
             >
               <Sparkles className="w-5 h-5" />
               Enter Matchmaking Queue

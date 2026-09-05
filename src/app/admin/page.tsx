@@ -220,37 +220,37 @@ export default function AdminPage() {
             <Shield className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white">Super Admin Moderation Panel</h1>
-            <p className="text-xs text-gray-400">Manage safety reports, suspensions, and badges</p>
+            <h1 className="text-2xl font-bold text-foreground">Super Admin Moderation Panel</h1>
+            <p className="text-xs text-muted-foreground">Manage safety reports, suspensions, and badges</p>
           </div>
         </div>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="glass-panel p-5 rounded-2xl border border-white/5 flex items-center justify-between">
+        <div className="glass-panel p-5 rounded-2xl border border-foreground/5 flex items-center justify-between">
           <div>
-            <span className="text-xs text-gray-400 font-medium">Active Rooms</span>
-            <h3 className="text-2xl font-extrabold text-white mt-1">{stats?.activeRooms ?? 0}</h3>
+            <span className="text-xs text-muted-foreground font-medium">Active Rooms</span>
+            <h3 className="text-2xl font-extrabold text-foreground mt-1">{stats?.activeRooms ?? 0}</h3>
           </div>
           <div className="w-10 h-10 rounded-xl bg-primary/20 text-primary flex items-center justify-center">
             <Tv className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="glass-panel p-5 rounded-2xl border border-white/5 flex items-center justify-between">
+        <div className="glass-panel p-5 rounded-2xl border border-foreground/5 flex items-center justify-between">
           <div>
-            <span className="text-xs text-gray-400 font-medium">Users in Queue</span>
-            <h3 className="text-2xl font-extrabold text-white mt-1">{stats?.queuedUsers ?? 0}</h3>
+            <span className="text-xs text-muted-foreground font-medium">Users in Queue</span>
+            <h3 className="text-2xl font-extrabold text-foreground mt-1">{stats?.queuedUsers ?? 0}</h3>
           </div>
           <div className="w-10 h-10 rounded-xl bg-accent/20 text-accent flex items-center justify-center">
             <Users className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="glass-panel p-5 rounded-2xl border border-white/5 flex items-center justify-between">
+        <div className="glass-panel p-5 rounded-2xl border border-foreground/5 flex items-center justify-between">
           <div>
-            <span className="text-xs text-gray-400 font-medium">Open Safety Reports</span>
+            <span className="text-xs text-muted-foreground font-medium">Open Safety Reports</span>
             <h3 className="text-2xl font-extrabold text-amber-400 mt-1">{stats?.openReports ?? 0}</h3>
           </div>
           <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
@@ -258,10 +258,10 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <div className="glass-panel p-5 rounded-2xl border border-white/5 flex items-center justify-between">
+        <div className="glass-panel p-5 rounded-2xl border border-foreground/5 flex items-center justify-between">
           <div>
-            <span className="text-xs text-gray-400 font-medium">Total Platform Users</span>
-            <h3 className="text-2xl font-extrabold text-white mt-1">{stats?.totalUsers ?? 0}</h3>
+            <span className="text-xs text-muted-foreground font-medium">Total Platform Users</span>
+            <h3 className="text-2xl font-extrabold text-foreground mt-1">{stats?.totalUsers ?? 0}</h3>
           </div>
           <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
             <UserCheck className="w-5 h-5" />
@@ -274,7 +274,7 @@ export default function AdminPage() {
         <button
           onClick={() => setActiveTab('users')}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-            activeTab === 'users' ? 'bg-primary text-white shadow' : 'text-gray-400 hover:text-white'
+            activeTab === 'users' ? 'bg-primary text-foreground shadow' : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           Users ({users.length})
@@ -282,7 +282,7 @@ export default function AdminPage() {
         <button
           onClick={() => setActiveTab('reports')}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-            activeTab === 'reports' ? 'bg-primary text-white shadow' : 'text-gray-400 hover:text-white'
+            activeTab === 'reports' ? 'bg-primary text-foreground shadow' : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           Safety Reports Queue ({reports.length})
@@ -290,7 +290,7 @@ export default function AdminPage() {
         <button
           onClick={() => setActiveTab('badges')}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-            activeTab === 'badges' ? 'bg-primary text-white shadow' : 'text-gray-400 hover:text-white'
+            activeTab === 'badges' ? 'bg-primary text-foreground shadow' : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           Badge Catalog ({badges.length})
@@ -298,7 +298,7 @@ export default function AdminPage() {
         <button
           onClick={() => setActiveTab('logs')}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-            activeTab === 'logs' ? 'bg-primary text-white shadow' : 'text-gray-400 hover:text-white'
+            activeTab === 'logs' ? 'bg-primary text-foreground shadow' : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           Admin Action Logs
@@ -306,7 +306,7 @@ export default function AdminPage() {
         <button
           onClick={() => setActiveTab('settings')}
           className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
-            activeTab === 'settings' ? 'bg-primary text-white shadow' : 'text-gray-400 hover:text-white'
+            activeTab === 'settings' ? 'bg-primary text-foreground shadow' : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           <SettingsIcon className="w-3.5 h-3.5" />
@@ -318,7 +318,7 @@ export default function AdminPage() {
       {activeTab === 'users' && (
         <div className="space-y-4">
           <div className="relative max-w-sm">
-            <Search className="w-4 h-4 text-gray-500 absolute left-3.5 top-3" />
+            <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-3" />
             <input
               type="text"
               value={userSearch}
@@ -327,13 +327,13 @@ export default function AdminPage() {
                 fetchUsers(e.target.value);
               }}
               placeholder="Search by name or email..."
-              className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-primary"
+              className="w-full bg-foreground/5 border border-foreground/10 rounded-xl pl-10 pr-4 py-2 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary"
             />
           </div>
 
-          <div className="glass-panel rounded-2xl border border-white/5 overflow-hidden overflow-x-auto">
+          <div className="glass-panel rounded-2xl border border-foreground/5 overflow-hidden overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-white/5 text-gray-400 uppercase font-semibold border-b border-border">
+              <thead className="bg-foreground/5 text-muted-foreground uppercase font-semibold border-b border-border">
                 <tr>
                   <th className="p-4">User</th>
                   <th className="p-4">Role</th>
@@ -346,18 +346,18 @@ export default function AdminPage() {
               <tbody className="divide-y divide-border">
                 {users.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-gray-500">
+                    <td colSpan={6} className="p-8 text-center text-muted-foreground">
                       No users found.
                     </td>
                   </tr>
                 ) : (
                   users.map((u) => (
-                    <tr key={u.id} className="hover:bg-white/5">
+                    <tr key={u.id} className="hover:bg-foreground/5">
                       <td className="p-4">
                         <div className="flex items-center gap-2.5">
                           <img src={u.avatarUrl} alt="" className="w-7 h-7 rounded-full" />
                           <div>
-                            <div className="font-semibold text-white flex items-center gap-1.5">
+                            <div className="font-semibold text-foreground flex items-center gap-1.5">
                               {u.displayName}
                               {u.isSuspended && (
                                 <span className="text-[9px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded uppercase font-bold">
@@ -365,12 +365,12 @@ export default function AdminPage() {
                                 </span>
                               )}
                               {u.isGuest && (
-                                <span className="text-[9px] bg-white/10 text-gray-400 px-1.5 py-0.5 rounded uppercase font-bold">
+                                <span className="text-[9px] bg-foreground/10 text-muted-foreground px-1.5 py-0.5 rounded uppercase font-bold">
                                   Guest
                                 </span>
                               )}
                             </div>
-                            <div className="text-gray-500">{u.email}</div>
+                            <div className="text-muted-foreground">{u.email}</div>
                           </div>
                         </div>
                       </td>
@@ -384,14 +384,14 @@ export default function AdminPage() {
                           {u.isVerified ? 'Verified' : 'Unverified'}
                         </span>
                       </td>
-                      <td className="p-4 text-gray-400">{u._count?.badges ?? 0}</td>
-                      <td className="p-4 text-gray-400">{new Date(u.createdAt).toLocaleDateString()}</td>
+                      <td className="p-4 text-muted-foreground">{u._count?.badges ?? 0}</td>
+                      <td className="p-4 text-muted-foreground">{new Date(u.createdAt).toLocaleDateString()}</td>
                       <td className="p-4 text-right space-x-2 whitespace-nowrap">
                         <button
                           onClick={() => toggleUserVerified(u.id, u.isVerified)}
                           className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
                             u.isVerified
-                              ? 'bg-white/10 text-gray-300 hover:bg-white/20'
+                              ? 'bg-foreground/10 text-muted-foreground hover:bg-foreground/20'
                               : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
                           }`}
                         >
@@ -401,7 +401,7 @@ export default function AdminPage() {
                           <button
                             onClick={() => resendVerification(u.id)}
                             title="Resend verification email"
-                            className="px-2 py-1 rounded-lg text-xs font-bold bg-white/10 text-gray-300 hover:bg-white/20 inline-flex items-center gap-1"
+                            className="px-2 py-1 rounded-lg text-xs font-bold bg-foreground/10 text-muted-foreground hover:bg-foreground/20 inline-flex items-center gap-1"
                           >
                             <Mail className="w-3 h-3" />
                           </button>
@@ -444,16 +444,16 @@ export default function AdminPage() {
           ].map((flag) => (
             <div
               key={flag.key}
-              className="glass-panel p-4 rounded-2xl border border-white/10 flex items-start justify-between gap-3"
+              className="glass-panel p-4 rounded-2xl border border-foreground/10 flex items-start justify-between gap-3"
             >
               <div>
-                <h4 className="font-bold text-white text-sm">{flag.title}</h4>
-                <p className="text-xs text-gray-400 mt-0.5">{flag.desc}</p>
+                <h4 className="font-bold text-foreground text-sm">{flag.title}</h4>
+                <p className="text-xs text-muted-foreground mt-0.5">{flag.desc}</p>
               </div>
               <button
                 onClick={() => toggleSetting(flag.key)}
                 className={`relative flex-shrink-0 w-11 h-6 rounded-full transition-colors ${
-                  settings[flag.key] ? 'bg-primary' : 'bg-white/10'
+                  settings[flag.key] ? 'bg-primary' : 'bg-foreground/10'
                 }`}
               >
                 <span
@@ -470,9 +470,9 @@ export default function AdminPage() {
       {/* Tab 1: Safety Reports Queue */}
       {activeTab === 'reports' && (
         <div className="space-y-4">
-          <div className="glass-panel rounded-2xl border border-white/5 overflow-hidden">
+          <div className="glass-panel rounded-2xl border border-foreground/5 overflow-hidden">
             <table className="w-full text-left text-xs">
-              <thead className="bg-white/5 text-gray-400 uppercase font-semibold border-b border-border">
+              <thead className="bg-foreground/5 text-muted-foreground uppercase font-semibold border-b border-border">
                 <tr>
                   <th className="p-4">Reporter</th>
                   <th className="p-4">Reported User</th>
@@ -485,14 +485,14 @@ export default function AdminPage() {
               <tbody className="divide-y divide-border">
                 {reports.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-gray-500">
+                    <td colSpan={6} className="p-8 text-center text-muted-foreground">
                       No reports filed.
                     </td>
                   </tr>
                 ) : (
                   reports.map((r) => (
-                    <tr key={r.id} className="hover:bg-white/5">
-                      <td className="p-4 font-semibold text-white">{r.reporter?.displayName}</td>
+                    <tr key={r.id} className="hover:bg-foreground/5">
+                      <td className="p-4 font-semibold text-foreground">{r.reporter?.displayName}</td>
                       <td className="p-4">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-red-400">{r.reported?.displayName}</span>
@@ -511,19 +511,19 @@ export default function AdminPage() {
                               ? 'bg-amber-500/20 text-amber-400'
                               : r.status === 'ACTIONED'
                               ? 'bg-red-500/20 text-red-400'
-                              : 'bg-gray-500/20 text-gray-400'
+                              : 'bg-muted text-muted-foreground'
                           }`}
                         >
                           {r.status}
                         </span>
                       </td>
-                      <td className="p-4 text-gray-400">
+                      <td className="p-4 text-muted-foreground">
                         {new Date(r.createdAt).toLocaleDateString()}
                       </td>
                       <td className="p-4 text-right space-x-2">
                         <button
                           onClick={() => setSelectedReport(r)}
-                          className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-semibold"
+                          className="px-3 py-1 bg-foreground/10 hover:bg-foreground/20 text-foreground rounded-lg text-xs font-semibold"
                         >
                           Review
                         </button>
@@ -550,32 +550,32 @@ export default function AdminPage() {
       {/* Tab 2: Badge Catalog Builder */}
       {activeTab === 'badges' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-4 glass-panel p-6 rounded-2xl border border-white/5 space-y-4">
-            <h3 className="font-bold text-white text-sm">Create New Badge</h3>
+          <div className="lg:col-span-4 glass-panel p-6 rounded-2xl border border-foreground/5 space-y-4">
+            <h3 className="font-bold text-foreground text-sm">Create New Badge</h3>
             <input
               type="text"
               placeholder="Badge Name (e.g. Night Owl)"
               value={badgeName}
               onChange={(e) => setBadgeName(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-xs text-white"
+              className="w-full bg-foreground/5 border border-foreground/10 rounded-xl p-2.5 text-xs text-foreground"
             />
             <input
               type="text"
               placeholder="Description"
               value={badgeDesc}
               onChange={(e) => setBadgeDesc(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-xs text-white"
+              className="w-full bg-foreground/5 border border-foreground/10 rounded-xl p-2.5 text-xs text-foreground"
             />
             <input
               type="text"
               placeholder="Icon Emoji (e.g. 🦉)"
               value={badgeIcon}
               onChange={(e) => setBadgeIcon(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-xs text-white"
+              className="w-full bg-foreground/5 border border-foreground/10 rounded-xl p-2.5 text-xs text-foreground"
             />
             <button
               onClick={handleCreateBadge}
-              className="w-full py-2.5 bg-primary text-white text-xs font-bold rounded-xl glow-button"
+              className="w-full py-2.5 bg-primary text-foreground text-xs font-bold rounded-xl glow-button"
             >
               Add Badge Definition
             </button>
@@ -583,11 +583,11 @@ export default function AdminPage() {
 
           <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-4">
             {badges.map((b) => (
-              <div key={b.id} className="glass-panel p-4 rounded-2xl border border-white/10 flex items-center gap-3">
+              <div key={b.id} className="glass-panel p-4 rounded-2xl border border-foreground/10 flex items-center gap-3">
                 <span className="text-3xl">{b.iconUrl || '🏆'}</span>
                 <div>
-                  <h4 className="font-bold text-white text-sm">{b.name}</h4>
-                  <p className="text-xs text-gray-400">{b.description}</p>
+                  <h4 className="font-bold text-foreground text-sm">{b.name}</h4>
+                  <p className="text-xs text-muted-foreground">{b.description}</p>
                 </div>
               </div>
             ))}
@@ -597,15 +597,15 @@ export default function AdminPage() {
 
       {/* Tab 3: Admin Action Audit Logs */}
       {activeTab === 'logs' && (
-        <div className="glass-panel rounded-2xl border border-white/5 p-4 space-y-2 max-h-96 overflow-y-auto">
+        <div className="glass-panel rounded-2xl border border-foreground/5 p-4 space-y-2 max-h-96 overflow-y-auto">
           {stats?.recentLogs?.map((log: any) => (
-            <div key={log.id} className="p-3 rounded-xl bg-white/5 text-xs flex items-center justify-between">
+            <div key={log.id} className="p-3 rounded-xl bg-foreground/5 text-xs flex items-center justify-between">
               <div>
                 <span className="font-bold text-indigo-300">{log.admin?.displayName}: </span>
-                <span className="text-white font-mono">{log.action} </span>
-                <span className="text-gray-400">on {log.targetType} ({log.targetId})</span>
+                <span className="text-foreground font-mono">{log.action} </span>
+                <span className="text-muted-foreground">on {log.targetType} ({log.targetId})</span>
               </div>
-              <span className="text-gray-500">{new Date(log.createdAt).toLocaleString()}</span>
+              <span className="text-muted-foreground">{new Date(log.createdAt).toLocaleString()}</span>
             </div>
           ))}
         </div>
@@ -615,8 +615,8 @@ export default function AdminPage() {
       {selectedReport && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
           <div className="glass-panel w-full max-w-md p-6 rounded-2xl border border-border space-y-4">
-            <h3 className="text-lg font-bold text-white">Review Report Details</h3>
-            <p className="text-xs text-gray-300">
+            <h3 className="text-lg font-bold text-foreground">Review Report Details</h3>
+            <p className="text-xs text-muted-foreground">
               <strong>Details:</strong> {selectedReport.details || 'No details provided'}
             </p>
 
@@ -624,19 +624,19 @@ export default function AdminPage() {
               placeholder="Resolution note (e.g. Warning issued to user)..."
               value={resolutionNote}
               onChange={(e) => setResolutionNote(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-white h-24"
+              className="w-full bg-foreground/5 border border-foreground/10 rounded-xl p-3 text-xs text-foreground h-24"
             />
 
             <div className="flex gap-3">
               <button
                 onClick={() => updateReportStatus(selectedReport.id, 'DISMISSED')}
-                className="flex-1 py-2 bg-gray-600 hover:bg-gray-700 text-white text-xs font-bold rounded-xl"
+                className="flex-1 py-2 bg-muted hover:bg-muted/80 text-foreground text-xs font-bold rounded-xl"
               >
                 Dismiss
               </button>
               <button
                 onClick={() => updateReportStatus(selectedReport.id, 'ACTIONED')}
-                className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl"
+                className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-foreground text-xs font-bold rounded-xl"
               >
                 Mark Actioned
               </button>
