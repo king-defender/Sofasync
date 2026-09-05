@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Tv, Bell, Shield, LogOut, User as UserIcon, Sparkles, Users } from 'lucide-react';
+import { Tv, Bell, Shield, LogOut, User as UserIcon, Sparkles, Users, Compass } from 'lucide-react';
 
 export default function Navbar() {
   const router = useRouter();
@@ -90,6 +90,14 @@ export default function Navbar() {
             >
               <Sparkles className="w-4 h-4 text-primary" />
               Find Buddy
+            </Link>
+
+            <Link
+              href="/lobby"
+              className="text-sm font-medium text-gray-300 hover:text-white transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-white/5"
+            >
+              <Compass className="w-4 h-4" />
+              Lobby
             </Link>
 
             {user.role === 'SUPER_ADMIN' && (

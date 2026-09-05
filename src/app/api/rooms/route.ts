@@ -15,14 +15,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Account suspended.' }, { status: 403 });
     }
 
-    const { mediaSource = 'SCREEN_SHARE' } = await req.json().catch(() => ({}));
+    const { mediaSource = 'SCREEN_SHARE', isPublic = false } = await req.json().catch(() => ({}));
+    const validSources = ['SCREEN_SHARE', 'LOCAL_FILE', 'YOUTUBE'];
 
     // Create room
     const room = await prisma.room.create({
       data: {
         hostId: auth.userId,
-        mediaSource: mediaSource === 'LOCAL_FILE' ? 'LOCAL_FILE' : 'SCREEN_SHARE',
+        mediaSource: validSources.includes(mediaSource) ? mediaSource : 'SCREEN_SHARE',
         status: 'ACTIVE',
+        isPublic: Boolean(isPublic),
       },
     });
 
@@ -45,8 +47,11 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
+    const scope = req.nextUrl.searchParams.get('scope');
+    const where = scope === 'public' ? { status: 'ACTIVE' as const, isPublic: true } : { status: 'ACTIVE' as const };
+
     const rooms = await prisma.room.findMany({
-      where: { status: 'ACTIVE' },
+      where,
       include: {
         host: { select: { id: true, displayName: true, avatarUrl: true } },
         participants: {

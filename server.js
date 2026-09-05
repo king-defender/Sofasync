@@ -61,6 +61,154 @@ app.prepare().then(() => {
       } catch (err) {
         console.error('Error fetching chat history:', err);
       }
+
+      // Fetch playlist/queue state + host-lock setting for synced YouTube mode
+      try {
+        const [room, playlist] = await Promise.all([
+          prisma.room.findUnique({ where: { id: roomId }, select: { hostControlsOnly: true, hostId: true } }),
+          prisma.playlistItem.findMany({
+            where: { roomId },
+            include: { addedBy: { select: { id: true, displayName: true } } },
+            orderBy: { order: 'asc' },
+          }),
+        ]);
+
+        socket.emit('playlist:history', playlist);
+        if (room) socket.emit('room:settings-update', { hostControlsOnly: room.hostControlsOnly });
+
+        const nowPlaying = playlist.find((p) => p.status === 'PLAYING');
+        if (nowPlaying) {
+          socket.emit('youtube:load', { youtubeId: nowPlaying.youtubeId, title: nowPlaying.title });
+        }
+      } catch (err) {
+        console.error('Error fetching playlist state:', err);
+      }
+    });
+
+    // Only the host may act when the room is locked to host-only controls
+    async function canControlPlayback(roomId, senderId) {
+      const room = await prisma.room.findUnique({ where: { id: roomId }, select: { hostId: true, hostControlsOnly: true } });
+      if (!room) return false;
+      return !room.hostControlsOnly || room.hostId === senderId;
+    }
+
+    // Add a link to the room's queue (FR-2.x extension: synced YouTube/URL source)
+    socket.on('playlist:add', async ({ roomId, senderId, youtubeId, title }) => {
+      try {
+        if (!youtubeId) return;
+        const count = await prisma.playlistItem.count({ where: { roomId } });
+        await prisma.playlistItem.create({
+          data: { roomId, addedById: senderId, youtubeId, title: title || null, order: count },
+        });
+
+        const playlist = await prisma.playlistItem.findMany({
+          where: { roomId },
+          include: { addedBy: { select: { id: true, displayName: true } } },
+          orderBy: { order: 'asc' },
+        });
+        io.to(roomId).emit('playlist:updated', playlist);
+      } catch (err) {
+        console.error('playlist:add error:', err);
+      }
+    });
+
+    // Remove a queued item - the person who added it, or the host, may do this
+    socket.on('playlist:remove', async ({ roomId, senderId, itemId }) => {
+      try {
+        const item = await prisma.playlistItem.findUnique({ where: { id: itemId } });
+        if (!item || item.roomId !== roomId) return;
+
+        const room = await prisma.room.findUnique({ where: { id: roomId }, select: { hostId: true } });
+        if (item.addedById !== senderId && room?.hostId !== senderId) return;
+
+        await prisma.playlistItem.delete({ where: { id: itemId } });
+        const playlist = await prisma.playlistItem.findMany({
+          where: { roomId },
+          include: { addedBy: { select: { id: true, displayName: true } } },
+          orderBy: { order: 'asc' },
+        });
+        io.to(roomId).emit('playlist:updated', playlist);
+      } catch (err) {
+        console.error('playlist:remove error:', err);
+      }
+    });
+
+    // Load a specific queued item as "now playing" (host-gated when locked)
+    socket.on('playlist:play', async ({ roomId, senderId, itemId }) => {
+      try {
+        if (!(await canControlPlayback(roomId, senderId))) return;
+
+        const item = await prisma.playlistItem.findUnique({ where: { id: itemId } });
+        if (!item || item.roomId !== roomId) return;
+
+        await prisma.playlistItem.updateMany({
+          where: { roomId, status: 'PLAYING' },
+          data: { status: 'PLAYED' },
+        });
+        await prisma.playlistItem.update({ where: { id: itemId }, data: { status: 'PLAYING' } });
+
+        io.to(roomId).emit('youtube:load', { youtubeId: item.youtubeId, title: item.title });
+
+        const playlist = await prisma.playlistItem.findMany({
+          where: { roomId },
+          include: { addedBy: { select: { id: true, displayName: true } } },
+          orderBy: { order: 'asc' },
+        });
+        io.to(roomId).emit('playlist:updated', playlist);
+      } catch (err) {
+        console.error('playlist:play error:', err);
+      }
+    });
+
+    // Load a brand new link and play it immediately (skips the queue - for
+    // "start watching this now" rather than "add for later")
+    socket.on('youtube:load-and-play', async ({ roomId, senderId, youtubeId, title }) => {
+      try {
+        if (!youtubeId || !(await canControlPlayback(roomId, senderId))) return;
+
+        await prisma.playlistItem.updateMany({
+          where: { roomId, status: 'PLAYING' },
+          data: { status: 'PLAYED' },
+        });
+        const count = await prisma.playlistItem.count({ where: { roomId } });
+        const item = await prisma.playlistItem.create({
+          data: { roomId, addedById: senderId, youtubeId, title: title || null, order: count, status: 'PLAYING' },
+        });
+
+        io.to(roomId).emit('youtube:load', { youtubeId: item.youtubeId, title: item.title });
+
+        const playlist = await prisma.playlistItem.findMany({
+          where: { roomId },
+          include: { addedBy: { select: { id: true, displayName: true } } },
+          orderBy: { order: 'asc' },
+        });
+        io.to(roomId).emit('playlist:updated', playlist);
+      } catch (err) {
+        console.error('youtube:load-and-play error:', err);
+      }
+    });
+
+    // Play/pause/seek sync for the currently loaded YouTube video (host-gated when locked)
+    socket.on('youtube:control', async ({ roomId, senderId, action, time }) => {
+      try {
+        if (!(await canControlPlayback(roomId, senderId))) return;
+        socket.to(roomId).emit('youtube:control', { action, time });
+      } catch (err) {
+        console.error('youtube:control error:', err);
+      }
+    });
+
+    // Host toggles whether only they can drive playback, or anyone can
+    socket.on('room:settings-update', async ({ roomId, senderId, hostControlsOnly }) => {
+      try {
+        const room = await prisma.room.findUnique({ where: { id: roomId }, select: { hostId: true } });
+        if (!room || room.hostId !== senderId) return;
+
+        await prisma.room.update({ where: { id: roomId }, data: { hostControlsOnly: Boolean(hostControlsOnly) } });
+        io.to(roomId).emit('room:settings-update', { hostControlsOnly: Boolean(hostControlsOnly) });
+      } catch (err) {
+        console.error('room:settings-update error:', err);
+      }
     });
 
     // Send Message (FR-6.1 - FR-6.4, FR-6.6)

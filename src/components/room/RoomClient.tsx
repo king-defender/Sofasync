@@ -10,6 +10,7 @@ import {
   MicOff,
   Monitor,
   FileVideo,
+  Youtube,
   Send,
   Smile,
   Clock,
@@ -21,11 +22,42 @@ import {
   Star,
   Sparkles,
   StopCircle,
+  Lock,
+  Unlock,
+  ListVideo,
+  MessageSquare,
+  Plus,
+  X,
+  Image as ImageIcon,
+  Headphones,
 } from 'lucide-react';
 
 interface RoomClientProps {
   roomId: string;
   currentUser: any;
+}
+
+// Reads a YouTube video ID out of a pasted link (watch/shorts/youtu.be/embed
+// formats) or a bare 11-character ID.
+function extractYoutubeId(input: string): string | null {
+  const trimmed = input.trim();
+  if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed;
+  try {
+    const url = new URL(trimmed);
+    if (url.hostname.includes('youtu.be')) return url.pathname.slice(1) || null;
+    if (url.hostname.includes('youtube.com')) {
+      if (url.pathname === '/watch') return url.searchParams.get('v');
+      if (url.pathname.startsWith('/embed/')) return url.pathname.split('/embed/')[1] || null;
+      if (url.pathname.startsWith('/shorts/')) return url.pathname.split('/shorts/')[1] || null;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function isImageUrl(content: string): boolean {
+  return /^https?:\/\/\S+\.(gif|png|jpe?g|webp)(\?\S*)?$/i.test(content.trim());
 }
 
 export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
@@ -34,9 +66,28 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
 
   // Room state
   const [room, setRoom] = useState<any>(null);
-  const [mediaSource, setMediaSource] = useState<'SCREEN_SHARE' | 'LOCAL_FILE'>('SCREEN_SHARE');
+  const [mediaSource, setMediaSource] = useState<'SCREEN_SHARE' | 'LOCAL_FILE' | 'YOUTUBE'>('SCREEN_SHARE');
   const [isHost, setIsHost] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // Synced YouTube playback
+  const youtubePlayerRef = useRef<any>(null);
+  const applyingRemoteYoutubeUpdate = useRef(false);
+  const [currentYoutubeId, setCurrentYoutubeId] = useState<string | null>(null);
+  const [youtubeUrlInput, setYoutubeUrlInput] = useState('');
+  const [playlist, setPlaylist] = useState<any[]>([]);
+  const [hostControlsOnly, setHostControlsOnly] = useState(true);
+  const [favoriteSources, setFavoriteSources] = useState<any[]>([]);
+  const hostControlsOnlyRef = useRef(true);
+  const isHostRef = useRef(false);
+  useEffect(() => { hostControlsOnlyRef.current = hostControlsOnly; }, [hostControlsOnly]);
+  useEffect(() => { isHostRef.current = isHost; }, [isHost]);
+  const canControlYoutube = isHost || !hostControlsOnly;
+
+  // Sidebar tab + GIF input
+  const [sidebarTab, setSidebarTab] = useState<'chat' | 'queue'>('chat');
+  const [gifTargetOpen, setGifTargetOpen] = useState(false);
+  const [gifUrlInput, setGifUrlInput] = useState('');
 
   // Local media stream refs & states
   const mainVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -85,6 +136,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
   useEffect(() => {
     fetchRoomDetails();
     fetchContacts();
+    fetchFavorites();
     initWebcam();
 
     // Socket.IO init
@@ -146,6 +198,35 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
 
     socket.on('room:media-source-changed', ({ mediaSource }) => {
       setMediaSource(mediaSource);
+    });
+
+    socket.on('youtube:load', ({ youtubeId }: { youtubeId: string; title?: string }) => {
+      setCurrentYoutubeId(youtubeId);
+      ensureYoutubePlayer(youtubeId);
+    });
+
+    socket.on('youtube:control', ({ action, time }: { action: string; time: number }) => {
+      const player = youtubePlayerRef.current;
+      if (!player) return;
+      applyingRemoteYoutubeUpdate.current = true;
+      if (action === 'play') {
+        player.seekTo(time, true);
+        player.playVideo();
+      } else if (action === 'pause') {
+        player.seekTo(time, true);
+        player.pauseVideo();
+      } else if (action === 'seek') {
+        player.seekTo(time, true);
+      }
+      setTimeout(() => {
+        applyingRemoteYoutubeUpdate.current = false;
+      }, 400);
+    });
+
+    socket.on('playlist:history', (items: any[]) => setPlaylist(items));
+    socket.on('playlist:updated', (items: any[]) => setPlaylist(items));
+    socket.on('room:settings-update', ({ hostControlsOnly }: { hostControlsOnly: boolean }) => {
+      setHostControlsOnly(hostControlsOnly);
     });
 
     socket.on('room:movie-stream-stopped', () => {
@@ -226,6 +307,147 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
     }
   }, [messages]);
 
+  // Load the YouTube IFrame API once (idempotent - safe if already present)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if ((window as any).YT?.Player || document.getElementById('youtube-iframe-api')) return;
+    const tag = document.createElement('script');
+    tag.id = 'youtube-iframe-api';
+    tag.src = 'https://www.youtube.com/iframe_api';
+    document.body.appendChild(tag);
+  }, []);
+
+  // Drift-correction heartbeat: whoever's allowed to control playback nudges
+  // everyone else back in sync every few seconds, rather than relying on a
+  // single seek event (the YouTube IFrame API has no dedicated seek event).
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const player = youtubePlayerRef.current;
+      if (!player || mediaSource !== 'YOUTUBE' || !canControlYoutube) return;
+      if (typeof player.getPlayerState !== 'function') return;
+      if (player.getPlayerState() !== 1) return; // only while actually playing
+      socketRef.current?.emit('youtube:control', {
+        roomId,
+        senderId: currentUser.id,
+        action: 'seek',
+        time: player.getCurrentTime(),
+      });
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [mediaSource, canControlYoutube, roomId, currentUser.id]);
+
+  const fetchFavorites = async () => {
+    try {
+      const res = await fetch('/api/users/me/favorite-sources');
+      if (res.ok) {
+        const data = await res.json();
+        setFavoriteSources(data.favorites || []);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const ensureYoutubePlayer = (videoId: string) => {
+    const create = () => {
+      if (youtubePlayerRef.current) {
+        youtubePlayerRef.current.loadVideoById(videoId);
+        return;
+      }
+      youtubePlayerRef.current = new (window as any).YT.Player('youtube-player-target', {
+        videoId,
+        width: '100%',
+        height: '100%',
+        playerVars: {
+          autoplay: 1,
+          rel: 0,
+          controls: isHostRef.current || !hostControlsOnlyRef.current ? 1 : 0,
+        },
+        events: { onStateChange: handleYoutubeStateChange },
+      });
+    };
+
+    if ((window as any).YT?.Player) {
+      create();
+    } else {
+      const check = setInterval(() => {
+        if ((window as any).YT?.Player) {
+          clearInterval(check);
+          create();
+        }
+      }, 250);
+    }
+  };
+
+  const handleYoutubeStateChange = (event: any) => {
+    if (applyingRemoteYoutubeUpdate.current) return;
+    if (!canControlYoutube) return;
+    const YTState = (window as any).YT?.PlayerState;
+    if (!YTState) return;
+    const time = event.target.getCurrentTime();
+    if (event.data === YTState.PLAYING) {
+      socketRef.current?.emit('youtube:control', { roomId, senderId: currentUser.id, action: 'play', time });
+    } else if (event.data === YTState.PAUSED) {
+      socketRef.current?.emit('youtube:control', { roomId, senderId: currentUser.id, action: 'pause', time });
+    }
+  };
+
+  const submitLoadAndPlay = () => {
+    const id = extractYoutubeId(youtubeUrlInput);
+    if (!id) {
+      alert("Could not read a YouTube link from that - try pasting the full URL.");
+      return;
+    }
+    socketRef.current?.emit('youtube:load-and-play', { roomId, senderId: currentUser.id, youtubeId: id, title: null });
+    setYoutubeUrlInput('');
+  };
+
+  const submitAddToQueue = (rawInput?: string) => {
+    const id = extractYoutubeId(rawInput ?? youtubeUrlInput);
+    if (!id) {
+      alert("Could not read a YouTube link from that - try pasting the full URL.");
+      return;
+    }
+    socketRef.current?.emit('playlist:add', { roomId, senderId: currentUser.id, youtubeId: id, title: null });
+    if (!rawInput) setYoutubeUrlInput('');
+  };
+
+  const playQueueItem = (itemId: string) => {
+    socketRef.current?.emit('playlist:play', { roomId, senderId: currentUser.id, itemId });
+  };
+
+  const removeQueueItem = (itemId: string) => {
+    socketRef.current?.emit('playlist:remove', { roomId, senderId: currentUser.id, itemId });
+  };
+
+  const toggleHostLock = () => {
+    socketRef.current?.emit('room:settings-update', {
+      roomId,
+      senderId: currentUser.id,
+      hostControlsOnly: !hostControlsOnly,
+    });
+  };
+
+  const saveFavorite = async (youtubeId: string) => {
+    try {
+      await fetch('/api/users/me/favorite-sources', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ youtubeId }),
+      });
+      fetchFavorites();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const sendGif = (url: string) => {
+    if (!url.trim()) return;
+    socketRef.current?.emit('message:send', { roomId, senderId: currentUser.id, content: url.trim() });
+    setGifUrlInput('');
+    setGifTargetOpen(false);
+  };
+
   const fetchRoomDetails = async () => {
     try {
       const res = await fetch(`/api/rooms/${roomId}`);
@@ -235,6 +457,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
         setMediaSource(data.room.mediaSource);
         setIsHost(data.room.hostId === currentUser.id);
         setParticipants(data.room.participants || []);
+        setHostControlsOnly(data.room.hostControlsOnly ?? true);
       }
     } catch (e) {
       console.error(e);
@@ -384,10 +607,13 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
   };
 
   // Switch Media Source Mid-Session (FR-2.5)
-  const handleSwitchMediaSource = async (newSource: 'SCREEN_SHARE' | 'LOCAL_FILE') => {
+  const handleSwitchMediaSource = async (newSource: 'SCREEN_SHARE' | 'LOCAL_FILE' | 'YOUTUBE') => {
     try {
       if (isBroadcasting) {
         stopBroadcasting();
+      }
+      if (newSource !== 'YOUTUBE') {
+        setCurrentYoutubeId(null);
       }
       const res = await fetch(`/api/rooms/${roomId}/media-source`, {
         method: 'PATCH',
@@ -590,8 +816,21 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
             Watch Room <span className="text-gray-400 font-mono text-xs">({roomId})</span>
           </h2>
           <span className="text-xs px-2.5 py-1 rounded-full bg-primary/20 text-primary border border-primary/30 font-semibold uppercase">
-            {mediaSource === 'SCREEN_SHARE' ? 'Screen Share' : 'Local File'} Mode
+            {mediaSource === 'SCREEN_SHARE' ? 'Screen Share' : mediaSource === 'YOUTUBE' ? 'YouTube' : 'Local File'} Mode
           </span>
+          {mediaSource === 'YOUTUBE' && (
+            <span
+              title={hostControlsOnly ? 'Only the host can play/pause/seek' : 'Anyone can control playback'}
+              className={`text-xs px-2.5 py-1 rounded-full border font-semibold flex items-center gap-1.5 ${
+                hostControlsOnly
+                  ? 'bg-white/5 text-gray-400 border-white/10'
+                  : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+              }`}
+            >
+              {hostControlsOnly ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+              {hostControlsOnly ? 'Host-Only Controls' : 'Open Controls'}
+            </span>
+          )}
         </div>
 
         {/* Action Controls */}
@@ -604,6 +843,31 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
             >
               <StopCircle className="w-4 h-4 text-red-400" />
               Stop Sharing Screen
+            </button>
+          )}
+
+          {/* Voice-only quick toggle */}
+          <button
+            onClick={toggleCamera}
+            title="Turn your camera off and stay on voice only"
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border transition-all ${
+              !cameraOn
+                ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300'
+                : 'bg-white/5 border-white/10 text-gray-400'
+            }`}
+          >
+            <Headphones className="w-3.5 h-3.5" />
+            Voice Only
+          </button>
+
+          {/* Host-lock toggle (YouTube mode only) */}
+          {isHost && mediaSource === 'YOUTUBE' && (
+            <button
+              onClick={toggleHostLock}
+              className="px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-white/10 bg-white/5 hover:bg-white/10 text-gray-200 transition-all"
+            >
+              {hostControlsOnly ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+              {hostControlsOnly ? 'Let Anyone Control' : 'Lock to Host Only'}
             </button>
           )}
 
@@ -627,6 +891,15 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
               >
                 <FileVideo className="w-3.5 h-3.5" />
                 Local File
+              </button>
+              <button
+                onClick={() => handleSwitchMediaSource('YOUTUBE')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                  mediaSource === 'YOUTUBE' ? 'bg-primary text-white shadow' : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <Youtube className="w-3.5 h-3.5" />
+                YouTube
               </button>
             </div>
           )}
@@ -669,14 +942,21 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-0 relative overflow-hidden">
         {/* Dominant Movie Video Feed Area (cols 1-9) */}
         <div className="lg:col-span-9 bg-black relative flex flex-col items-center justify-center min-h-[500px]">
-          {/* Main Broadcast Video Canvas */}
-          <video
-            ref={mainVideoRef}
-            controls
-            autoPlay
-            playsInline
-            className="w-full h-full max-h-[82vh] object-contain"
-          />
+          {/* Main Broadcast Video Canvas (screen-share / local-file paths) */}
+          {mediaSource !== 'YOUTUBE' && (
+            <video
+              ref={mainVideoRef}
+              controls
+              autoPlay
+              playsInline
+              className="w-full h-full max-h-[82vh] object-contain"
+            />
+          )}
+
+          {/* Synced YouTube player */}
+          {mediaSource === 'YOUTUBE' && (
+            <div id="youtube-player-target" className="w-full h-full max-h-[82vh]" />
+          )}
 
           {/* Stop Sharing Button Overlay over Video when broadcasting */}
           {isBroadcasting && isHost && (
@@ -692,9 +972,79 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
           )}
 
           {/* Broadcast Trigger Overlays for Host */}
-          {!isBroadcasting && isHost && (
+          {(mediaSource === 'YOUTUBE' ? !currentYoutubeId : !isBroadcasting && isHost) && (
             <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center p-6 text-center z-10">
-              {mediaSource === 'SCREEN_SHARE' ? (
+              {mediaSource === 'YOUTUBE' ? (
+                canControlYoutube ? (
+                  <div className="glass-card p-8 rounded-2xl max-w-md w-full border border-primary/30 flex flex-col items-center gap-4">
+                    <div className="w-16 h-16 rounded-2xl bg-primary/20 text-primary flex items-center justify-center">
+                      <Youtube className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white">Watch a YouTube Video Together</h3>
+                      <p className="text-xs text-gray-400 mt-1">Paste a link — everyone's player stays in sync.</p>
+                    </div>
+                    <div className="w-full flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={youtubeUrlInput}
+                        onChange={(e) => setYoutubeUrlInput(e.target.value)}
+                        placeholder="https://youtube.com/watch?v=..."
+                        className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-primary"
+                      />
+                      <button
+                        onClick={() => {
+                          const id = extractYoutubeId(youtubeUrlInput);
+                          if (id) saveFavorite(id);
+                        }}
+                        title="Save to favorites"
+                        className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-amber-400 flex-shrink-0"
+                      >
+                        <Star className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="w-full flex items-center gap-2">
+                      <button
+                        onClick={submitLoadAndPlay}
+                        className="flex-1 py-3 bg-primary hover:bg-primary-hover text-white text-sm font-bold rounded-xl glow-button transition-all flex items-center justify-center gap-2"
+                      >
+                        <Youtube className="w-4 h-4" />
+                        Load & Watch
+                      </button>
+                      <button
+                        onClick={() => submitAddToQueue()}
+                        title="Add to queue instead of playing now"
+                        className="px-4 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-gray-200 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Queue
+                      </button>
+                    </div>
+                    {favoriteSources.length > 0 && (
+                      <div className="w-full">
+                        <p className="text-[10px] uppercase font-bold text-gray-500 mb-1.5 text-left">Favorites</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {favoriteSources.map((f) => (
+                            <button
+                              key={f.id}
+                              onClick={() => setYoutubeUrlInput(f.youtubeId)}
+                              className="text-[11px] px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10"
+                            >
+                              {f.title || f.youtubeId}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="glass-card p-8 rounded-2xl max-w-md border border-white/10 flex flex-col items-center gap-3">
+                    <Lock className="w-8 h-8 text-gray-400" />
+                    <h3 className="text-lg font-bold text-white">Waiting for the host</h3>
+                    <p className="text-xs text-gray-400">Playback is locked to host-only control right now.</p>
+                  </div>
+                )
+              ) : mediaSource === 'SCREEN_SHARE' ? (
                 <div className="glass-card p-8 rounded-2xl max-w-md border border-primary/30 flex flex-col items-center gap-4">
                   <div className="w-16 h-16 rounded-2xl bg-primary/20 text-primary flex items-center justify-center">
                     <Monitor className="w-8 h-8" />
@@ -803,17 +1153,33 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
 
         {/* Fixed Chat Sidebar (cols 10-12 per Layout A) */}
         <div className="lg:col-span-3 glass-panel border-l border-border flex flex-col h-[calc(100vh-125px)]">
-          {/* Chat Header */}
-          <div className="p-4 border-b border-border flex items-center justify-between">
-            <h3 className="font-bold text-sm text-white flex items-center gap-2">
-              <span>Room Chat</span>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-gray-300 font-mono">
-                {participants.length}/4 Users
-              </span>
-            </h3>
+          {/* Chat / Queue Tab Header */}
+          <div className="p-3 border-b border-border flex items-center gap-1.5">
+            <button
+              onClick={() => setSidebarTab('chat')}
+              className={`flex-1 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                sidebarTab === 'chat' ? 'bg-primary text-white shadow' : 'text-gray-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              Chat
+            </button>
+            <button
+              onClick={() => setSidebarTab('queue')}
+              className={`flex-1 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                sidebarTab === 'queue' ? 'bg-primary text-white shadow' : 'text-gray-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <ListVideo className="w-3.5 h-3.5" />
+              Queue {playlist.length > 0 && `(${playlist.length})`}
+            </button>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-gray-300 font-mono whitespace-nowrap">
+              {participants.length}/4
+            </span>
           </div>
 
           {/* Messages Container */}
+          {sidebarTab === 'chat' && (
           <div ref={chatScrollRef} className="flex-1 overflow-y-auto p-4 space-y-3.5">
             {messages.map((msg) => (
               <div key={msg.id} className="flex flex-col gap-1 group">
@@ -827,7 +1193,11 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
                 </div>
 
                 <div className="bg-white/5 p-2.5 rounded-xl border border-white/5 text-xs text-gray-200 relative group">
-                  <p>{msg.content}</p>
+                  {isImageUrl(msg.content) ? (
+                    <img src={msg.content} alt="GIF" className="max-w-full max-h-40 rounded-lg" />
+                  ) : (
+                    <p>{msg.content}</p>
+                  )}
 
                   {/* Local-media timestamp comment tag (FR-6.6) */}
                   {msg.videoTimestamp !== null && msg.videoTimestamp !== undefined && (
@@ -880,25 +1250,122 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
               </div>
             ))}
           </div>
+          )}
 
-          {/* Chat Input Bar */}
-          <div className="p-3 border-t border-border bg-card/50">
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                placeholder="Send reaction or comment..."
-                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-primary"
-              />
-              <button
-                onClick={handleSendMessage}
-                className="p-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white shadow transition-all"
-              >
-                <Send className="w-3.5 h-3.5" />
-              </button>
+          {/* Queue Panel */}
+          {sidebarTab === 'queue' && (
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {playlist.length === 0 ? (
+                <p className="text-xs text-gray-500 text-center py-6">Nothing queued yet — add a YouTube link below.</p>
+              ) : (
+                playlist.map((item) => (
+                  <div
+                    key={item.id}
+                    className={`p-2.5 rounded-xl border text-xs flex items-center justify-between gap-2 ${
+                      item.status === 'PLAYING'
+                        ? 'bg-primary/10 border-primary/30'
+                        : 'bg-white/5 border-white/5'
+                    }`}
+                  >
+                    <div className="min-w-0">
+                      <div className="font-semibold text-white truncate">{item.title || item.youtubeId}</div>
+                      <div className="text-gray-500 text-[10px]">
+                        {item.status === 'PLAYING' ? '▶ Now playing' : 'Queued'} · added by {item.addedBy?.displayName || 'someone'}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      {item.status !== 'PLAYING' && canControlYoutube && (
+                        <button
+                          onClick={() => playQueueItem(item.id)}
+                          className="p-1.5 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary"
+                          title="Play now"
+                        >
+                          <Youtube className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                      {(item.addedBy?.id === currentUser.id || isHost) && (
+                        <button
+                          onClick={() => removeQueueItem(item.id)}
+                          className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400"
+                          title="Remove"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
+          )}
+
+          {/* GIF popup */}
+          {gifTargetOpen && (
+            <div className="px-3 pb-2">
+              <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl p-2">
+                <input
+                  type="text"
+                  value={gifUrlInput}
+                  onChange={(e) => setGifUrlInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && sendGif(gifUrlInput)}
+                  placeholder="Paste a GIF/image URL..."
+                  className="flex-1 bg-transparent text-xs text-white placeholder-gray-500 focus:outline-none"
+                />
+                <button onClick={() => sendGif(gifUrlInput)} className="text-primary">
+                  <Send className="w-3.5 h-3.5" />
+                </button>
+                <button onClick={() => setGifTargetOpen(false)} className="text-gray-500">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Add-to-queue bar (Queue tab) / Chat Input Bar (Chat tab) */}
+          <div className="p-3 border-t border-border bg-card/50">
+            {sidebarTab === 'queue' ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={youtubeUrlInput}
+                  onChange={(e) => setYoutubeUrlInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && submitAddToQueue()}
+                  placeholder="Paste a YouTube link to queue..."
+                  className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-primary"
+                />
+                <button
+                  onClick={() => submitAddToQueue()}
+                  className="p-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white shadow transition-all"
+                  title="Add to queue"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setGifTargetOpen(!gifTargetOpen)}
+                  className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 transition-colors flex-shrink-0"
+                  title="Send a GIF"
+                >
+                  <ImageIcon className="w-3.5 h-3.5" />
+                </button>
+                <input
+                  type="text"
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                  placeholder="Send reaction or comment..."
+                  className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-primary"
+                />
+                <button
+                  onClick={handleSendMessage}
+                  className="p-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white shadow transition-all"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

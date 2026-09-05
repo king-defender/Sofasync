@@ -14,7 +14,9 @@ import {
   Check,
   Monitor,
   FileVideo,
+  Youtube,
   Play,
+  Globe,
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -24,7 +26,8 @@ export default function DashboardPage() {
   const [contacts, setContacts] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [selectedSource, setSelectedSource] = useState<'SCREEN_SHARE' | 'LOCAL_FILE'>('SCREEN_SHARE');
+  const [selectedSource, setSelectedSource] = useState<'SCREEN_SHARE' | 'LOCAL_FILE' | 'YOUTUBE'>('SCREEN_SHARE');
+  const [makePublic, setMakePublic] = useState(false);
   const [creatingRoom, setCreatingRoom] = useState(false);
 
   useEffect(() => {
@@ -64,7 +67,7 @@ export default function DashboardPage() {
       const res = await fetch('/api/rooms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mediaSource: selectedSource }),
+        body: JSON.stringify({ mediaSource: selectedSource, isPublic: makePublic }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -156,7 +159,30 @@ export default function DashboardPage() {
               <FileVideo className="w-3.5 h-3.5" />
               Local File
             </button>
+            <button
+              onClick={() => setSelectedSource('YOUTUBE')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                selectedSource === 'YOUTUBE' ? 'bg-primary text-white shadow' : 'text-gray-400'
+              }`}
+            >
+              <Youtube className="w-3.5 h-3.5" />
+              YouTube
+            </button>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setMakePublic(!makePublic)}
+            title="Anyone can find and join this room from the public lobby"
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border transition-all ${
+              makePublic
+                ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300'
+                : 'bg-white/5 border-white/10 text-gray-400'
+            }`}
+          >
+            <Globe className="w-3.5 h-3.5" />
+            {makePublic ? 'Public' : 'Private'}
+          </button>
 
           <button
             onClick={handleCreateRoom}
@@ -206,7 +232,11 @@ export default function DashboardPage() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                        {r.mediaSource === 'SCREEN_SHARE' ? 'Screen Share' : 'Local File'}
+                        {r.mediaSource === 'SCREEN_SHARE'
+                          ? 'Screen Share'
+                          : r.mediaSource === 'YOUTUBE'
+                          ? 'YouTube'
+                          : 'Local File'}
                       </span>
                       <span className="text-xs text-gray-400">
                         {r.participants.length}/4 Users

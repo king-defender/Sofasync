@@ -21,9 +21,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       return NextResponse.json({ error: 'Only host can change media source' }, { status: 403 });
     }
 
+    const validSources = ['SCREEN_SHARE', 'LOCAL_FILE', 'YOUTUBE'];
     const updatedRoom = await prisma.room.update({
       where: { id: roomId },
-      data: { mediaSource: mediaSource === 'LOCAL_FILE' ? 'LOCAL_FILE' : 'SCREEN_SHARE' },
+      data: { mediaSource: validSources.includes(mediaSource) ? mediaSource : 'SCREEN_SHARE' },
     });
 
     return NextResponse.json({ room: updatedRoom });

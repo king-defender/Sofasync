@@ -14,6 +14,13 @@ generator client {
 enum MediaSource {
   SCREEN_SHARE
   LOCAL_FILE
+  YOUTUBE
+}
+
+enum PlaylistItemStatus {
+  QUEUED
+  PLAYING
+  PLAYED
 }
 
 enum RoomStatus {
@@ -101,18 +108,22 @@ model User {
   verificationToken EmailVerificationToken?
   resetTokens       PasswordResetToken[]
   adminActionLogs   AdminActionLog[]
+  playlistItemsAdded PlaylistItem[]
+  favoriteSources   FavoriteSource[]
 
   @@index([email])
 }
 
 model Room {
-  id          String      @id @default(cuid())
-  hostId      String
-  host        User        @relation("HostedRooms", fields: [hostId], references: [id])
-  mediaSource MediaSource
-  status      RoomStatus  @default(ACTIVE)
-  createdAt   DateTime    @default(now())
-  closedAt    DateTime?
+  id                String      @id @default(cuid())
+  hostId            String
+  host              User        @relation("HostedRooms", fields: [hostId], references: [id])
+  mediaSource       MediaSource
+  status            RoomStatus  @default(ACTIVE)
+  isPublic          Boolean     @default(false)
+  hostControlsOnly  Boolean     @default(true)
+  createdAt         DateTime    @default(now())
+  closedAt          DateTime?
 
   participants RoomParticipant[]
   messages     Message[]
@@ -121,8 +132,10 @@ model Room {
   reports      Report[]
   reviews      Review[]
   watchHistory WatchHistory[]
+  playlist     PlaylistItem[]
 
   @@index([status])
+  @@index([isPublic, status])
 }
 
 model RoomParticipant {
@@ -196,6 +209,34 @@ model Reaction {
   createdAt DateTime @default(now())
 
   @@unique([messageId, userId, emoji])
+}
+
+// ---------- Synced YouTube playback (playlist/queue) ----------
+
+model PlaylistItem {
+  id        String             @id @default(cuid())
+  roomId    String
+  room      Room               @relation(fields: [roomId], references: [id])
+  addedById String
+  addedBy   User               @relation(fields: [addedById], references: [id])
+  youtubeId String
+  title     String?
+  status    PlaylistItemStatus @default(QUEUED)
+  order     Int                @default(0)
+  createdAt DateTime           @default(now())
+
+  @@index([roomId, status, order])
+}
+
+model FavoriteSource {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  youtubeId String
+  title     String?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, youtubeId])
 }
 
 // ---------- Admin panel accountability (FR-8.8) ----------
