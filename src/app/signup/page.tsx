@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Tv, Lock, Mail, User, ArrowRight, Github, Chrome, Disc as Discord, CheckCircle2 } from 'lucide-react';
@@ -14,6 +14,16 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [created, setCreated] = useState(false);
   const [verificationRequired, setVerificationRequired] = useState(true);
+  const [providers, setProviders] = useState({ google: false, github: false, discord: false });
+
+  useEffect(() => {
+    fetch('/api/auth/oauth-providers')
+      .then((res) => res.json())
+      .then(setProviders)
+      .catch(() => {});
+  }, []);
+
+  const anyProviderAvailable = providers.google || providers.github || providers.discord;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,41 +93,51 @@ export default function SignupPage() {
           </div>
         ) : (
         <>
-        {/* Social Options */}
-        <div className="space-y-2.5">
-          <button
-            type="button"
-            onClick={() => handleSocialLogin('google')}
-            className="w-full py-2.5 px-4 bg-foreground/5 hover:bg-foreground/10 border border-foreground/10 rounded-xl text-xs font-semibold text-foreground flex items-center justify-center gap-3 transition-colors"
-          >
-            <Chrome className="w-4 h-4 text-red-600 dark:text-red-400" />
-            Sign up with Google
-          </button>
+        {/* Social Options - only shown for providers actually configured */}
+        {anyProviderAvailable && (
+          <div className="space-y-2.5">
+            {providers.google && (
+              <button
+                type="button"
+                onClick={() => handleSocialLogin('google')}
+                className="w-full py-2.5 px-4 bg-foreground/5 hover:bg-foreground/10 border border-foreground/10 rounded-xl text-xs font-semibold text-foreground flex items-center justify-center gap-3 transition-colors"
+              >
+                <Chrome className="w-4 h-4 text-red-600 dark:text-red-400" />
+                Sign up with Google
+              </button>
+            )}
 
-          <button
-            type="button"
-            onClick={() => handleSocialLogin('github')}
-            className="w-full py-2.5 px-4 bg-foreground/5 hover:bg-foreground/10 border border-foreground/10 rounded-xl text-xs font-semibold text-foreground flex items-center justify-center gap-3 transition-colors"
-          >
-            <Github className="w-4 h-4 text-foreground" />
-            Sign up with GitHub
-          </button>
+            {providers.github && (
+              <button
+                type="button"
+                onClick={() => handleSocialLogin('github')}
+                className="w-full py-2.5 px-4 bg-foreground/5 hover:bg-foreground/10 border border-foreground/10 rounded-xl text-xs font-semibold text-foreground flex items-center justify-center gap-3 transition-colors"
+              >
+                <Github className="w-4 h-4 text-foreground" />
+                Sign up with GitHub
+              </button>
+            )}
 
-          <button
-            type="button"
-            onClick={() => handleSocialLogin('discord')}
-            className="w-full py-2.5 px-4 bg-foreground/5 hover:bg-foreground/10 border border-foreground/10 rounded-xl text-xs font-semibold text-foreground flex items-center justify-center gap-3 transition-colors"
-          >
-            <Discord className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-            Sign up with Discord
-          </button>
-        </div>
+            {providers.discord && (
+              <button
+                type="button"
+                onClick={() => handleSocialLogin('discord')}
+                className="w-full py-2.5 px-4 bg-foreground/5 hover:bg-foreground/10 border border-foreground/10 rounded-xl text-xs font-semibold text-foreground flex items-center justify-center gap-3 transition-colors"
+              >
+                <Discord className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                Sign up with Discord
+              </button>
+            )}
+          </div>
+        )}
 
-        <div className="flex items-center gap-3 text-xs text-muted-foreground uppercase font-semibold">
-          <div className="flex-1 h-px bg-foreground/10"></div>
-          <span>Or with email</span>
-          <div className="flex-1 h-px bg-foreground/10"></div>
-        </div>
+        {anyProviderAvailable && (
+          <div className="flex items-center gap-3 text-xs text-muted-foreground uppercase font-semibold">
+            <div className="flex-1 h-px bg-foreground/10"></div>
+            <span>Or with email</span>
+            <div className="flex-1 h-px bg-foreground/10"></div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
