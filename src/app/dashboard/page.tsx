@@ -32,6 +32,11 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchData();
+    // Presence and the room list are both live state, not a one-time
+    // snapshot - without this, "online now" would freeze at whatever was
+    // true the moment the page loaded.
+    const interval = setInterval(fetchData, 20000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchData = async () => {
@@ -45,7 +50,9 @@ export default function DashboardPage() {
         return;
       }
 
-      const roomsRes = await fetch('/api/rooms');
+      // Only public rooms belong here - the old unscoped fetch leaked every
+      // active room, private ones included, to anyone who loaded a dashboard.
+      const roomsRes = await fetch('/api/rooms?scope=public');
       if (roomsRes.ok) {
         const rData = await roomsRes.json();
         setActiveRooms(rData.rooms || []);
@@ -332,10 +339,19 @@ export default function DashboardPage() {
                   className="flex items-center justify-between p-2.5 rounded-xl bg-foreground/5 hover:bg-foreground/10 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <img src={c.avatarUrl} alt="" className="w-8 h-8 rounded-full border border-foreground/10" />
+                    <div className="relative flex-shrink-0">
+                      <img src={c.avatarUrl} alt="" className="w-8 h-8 rounded-full border border-foreground/10" />
+                      <span
+                        className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-card ${
+                          c.isOnline ? 'bg-emerald-500' : 'bg-muted-foreground/50'
+                        }`}
+                      />
+                    </div>
                     <div>
                       <h4 className="text-xs font-bold text-foreground">{c.displayName}</h4>
-                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400">Ready to watch</span>
+                      <span className={`text-[10px] ${c.isOnline ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`}>
+                        {c.isOnline ? 'Online now' : 'Offline'}
+                      </span>
                     </div>
                   </div>
                 </div>

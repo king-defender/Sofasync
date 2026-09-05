@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { Tv, Bell, Shield, LogOut, User as UserIcon, Sparkles, Users, Compass } from 'lucide-react';
+import { Tv, Bell, Shield, LogOut, User as UserIcon, Sparkles, Users, Compass, Check, X } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 
 export default function Navbar() {
@@ -61,6 +61,28 @@ export default function Navbar() {
     if (!showNotifs && unreadCount > 0) {
       await fetch('/api/notifications', { method: 'PATCH' });
       setUnreadCount(0);
+    }
+  };
+
+  const respondToBuddyRequest = async (notification: any, status: 'ACCEPTED' | 'DECLINED') => {
+    const requestId = notification.payload?.requestId;
+    if (!requestId) return;
+
+    // Remove it from the list either way - acted on, no need to act again
+    setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
+
+    try {
+      const res = await fetch(`/api/buddy-requests/${requestId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      if (status === 'ACCEPTED' && res.ok) {
+        const data = await res.json();
+        if (data.roomId) router.push(`/room/${data.roomId}`);
+      }
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -163,13 +185,32 @@ export default function Navbar() {
                               ? `You earned the '${n.payload.badgeName}' badge!`
                               : 'You have a new update.'}
                           </p>
-                          {n.payload?.roomId && (
-                            <Link
-                              href={`/room/${n.payload.roomId}`}
-                              className="text-[11px] text-primary hover:underline mt-1 font-semibold block"
-                            >
-                              Join Room →
-                            </Link>
+                          {n.type === 'BUDDY_REQUEST' && n.payload?.requestId ? (
+                            <div className="flex items-center gap-2 mt-1.5">
+                              <button
+                                onClick={() => respondToBuddyRequest(n, 'ACCEPTED')}
+                                className="flex-1 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/30 font-semibold flex items-center justify-center gap-1"
+                              >
+                                <Check className="w-3 h-3" />
+                                Accept
+                              </button>
+                              <button
+                                onClick={() => respondToBuddyRequest(n, 'DECLINED')}
+                                className="flex-1 py-1.5 rounded-lg bg-foreground/10 text-muted-foreground hover:bg-foreground/20 font-semibold flex items-center justify-center gap-1"
+                              >
+                                <X className="w-3 h-3" />
+                                Decline
+                              </button>
+                            </div>
+                          ) : (
+                            n.payload?.roomId && (
+                              <Link
+                                href={`/room/${n.payload.roomId}`}
+                                className="text-[11px] text-primary hover:underline mt-1 font-semibold block"
+                              >
+                                Join Room →
+                              </Link>
+                            )
                           )}
                         </div>
                       ))

@@ -71,6 +71,13 @@ app.prepare().then(() => {
     socket.data = { authUserId: authPayload.userId, authRole: authPayload.role };
     console.log(`Socket connected: ${socket.id} (user ${authPayload.userId})`);
 
+    // Presence: a hash counting live connections per user, not a plain set -
+    // someone with the app open in two tabs must not read as "offline" the
+    // moment either tab closes. "Online" means this count is > 0.
+    redis.hincrby('presence:online', socket.data.authUserId, 1).catch((err) => {
+      console.error('Presence increment error:', err);
+    });
+
     // Join room
     socket.on('room:join', async ({ roomId }) => {
       try {
@@ -501,6 +508,15 @@ app.prepare().then(() => {
           }
         } catch (err) {
           console.error('Error cleaning up matchmaking state on disconnect:', err);
+        }
+
+        try {
+          const remaining = await redis.hincrby('presence:online', userId, -1);
+          if (remaining <= 0) {
+            await redis.hdel('presence:online', userId); // don't let the hash grow forever
+          }
+        } catch (err) {
+          console.error('Presence decrement error:', err);
         }
       }
     });

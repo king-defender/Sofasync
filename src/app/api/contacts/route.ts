@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getAuthUser } from '@/lib/auth';
+import { redis } from '@/lib/redis';
 
 export async function GET(req: NextRequest) {
   try {
@@ -18,10 +19,22 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const formatted = contacts.map((c) => {
+    const friends = contacts.map((c) => {
       const friend = c.initiatorId === auth.userId ? c.receiver : c.initiator;
       return { contactId: c.id, ...friend };
     });
+
+    // Real presence, not a hardcoded "Ready to watch" - server.js tracks a
+    // live-connection count per user in this same Redis hash.
+    let onlineCounts: (string | null)[] = [];
+    if (friends.length > 0) {
+      onlineCounts = await redis.hmget('presence:online', ...friends.map((f) => f.id));
+    }
+
+    const formatted = friends.map((f, i) => ({
+      ...f,
+      isOnline: Boolean(onlineCounts[i]) && parseInt(onlineCounts[i] as string, 10) > 0,
+    }));
 
     return NextResponse.json({ contacts: formatted });
   } catch (error) {
