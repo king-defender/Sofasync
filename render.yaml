@@ -1,0 +1,46 @@
+services:
+  - type: web
+    name: sofasync
+    runtime: node
+    plan: free
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Neon connection string (use the "direct" one, not pooled - this app
+      # keeps one long-lived PrismaClient, not serverless functions)
+      - key: DATABASE_URL
+        sync: false
+      # Upstash "ioredis" connection string, starts with rediss://
+      - key: REDIS_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: NEXTAUTH_SECRET
+        generateValue: true
+      # Update after first deploy if Render suffixes the service name
+      - key: NEXTAUTH_URL
+        value: https://sofasync.onrender.com
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      - key: DISCORD_CLIENT_ID
+        sync: false
+      - key: DISCORD_CLIENT_SECRET
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: MAIL_FROM
+        value: "Sofa Sync <no-reply@sofasync.local>"

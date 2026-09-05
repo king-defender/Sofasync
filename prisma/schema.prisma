@@ -1,0 +1,346 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ---------- Enums ----------
+
+enum MediaSource {
+  SCREEN_SHARE
+  LOCAL_FILE
+}
+
+enum RoomStatus {
+  ACTIVE
+  CLOSED
+}
+
+enum BuddyRequestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+enum QueueStatus {
+  WAITING
+  MATCHED
+  CANCELLED
+}
+
+enum ContactStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
+}
+
+enum ReportReason {
+  HARASSMENT
+  INAPPROPRIATE_CONTENT
+  SPAM
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  REVIEWED
+  ACTIONED
+  DISMISSED
+}
+
+enum NotificationType {
+  BUDDY_REQUEST
+  MATCH_FOUND
+  ROOM_INVITE_ACCEPTED
+  BADGE_EARNED
+  SYSTEM
+}
+
+enum Role {
+  USER
+  SUPER_ADMIN
+}
+
+// ---------- Core tables ----------
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String?
+  isVerified    Boolean  @default(false)
+  isGuest       Boolean  @default(false)
+  displayName   String
+  avatarUrl     String?
+  age           Int?
+  role          Role     @default(USER)
+  isSuspended   Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  hostedRooms       Room[]              @relation("HostedRooms")
+  roomParticipants  RoomParticipant[]
+  sentRequests      BuddyRequest[]      @relation("SentRequests")
+  receivedRequests  BuddyRequest[]      @relation("ReceivedRequests")
+  queueEntries      MatchmakingQueue[]
+  messages          Message[]
+  contactsInitiated Contact[]           @relation("ContactInitiator")
+  contactsReceived  Contact[]           @relation("ContactReceiver")
+  reportsFiled      Report[]            @relation("ReportsFiled")
+  reportsAgainst    Report[]            @relation("ReportsAgainst")
+  reportsReviewed   Report[]            @relation("ReportsReviewed")
+  notifications     Notification[]
+  watchHistory      WatchHistory[]
+  reviews           Review[]
+  badges            UserBadge[]
+  refreshTokens     RefreshToken[]
+  verificationToken EmailVerificationToken?
+  resetTokens       PasswordResetToken[]
+  adminActionLogs   AdminActionLog[]
+
+  @@index([email])
+}
+
+model Room {
+  id          String      @id @default(cuid())
+  hostId      String
+  host        User        @relation("HostedRooms", fields: [hostId], references: [id])
+  mediaSource MediaSource
+  status      RoomStatus  @default(ACTIVE)
+  createdAt   DateTime    @default(now())
+  closedAt    DateTime?
+
+  participants RoomParticipant[]
+  messages     Message[]
+  buddyRequest BuddyRequest?
+  matchOrigin  MatchmakingQueue[]
+  reports      Report[]
+  reviews      Review[]
+  watchHistory WatchHistory[]
+
+  @@index([status])
+}
+
+model RoomParticipant {
+  id         String    @id @default(cuid())
+  roomId     String
+  room       Room      @relation(fields: [roomId], references: [id])
+  userId     String
+  user       User      @relation(fields: [userId], references: [id])
+  cameraOn   Boolean   @default(true)
+  micOn      Boolean   @default(true)
+  joinedAt   DateTime  @default(now())
+  leftAt     DateTime?
+
+  @@unique([roomId, userId])
+  @@index([roomId])
+}
+
+model BuddyRequest {
+  id          String              @id @default(cuid())
+  senderId    String
+  sender      User                @relation("SentRequests", fields: [senderId], references: [id])
+  receiverId  String
+  receiver    User                @relation("ReceivedRequests", fields: [receiverId], references: [id])
+  roomId      String?             @unique
+  room        Room?               @relation(fields: [roomId], references: [id])
+  status      BuddyRequestStatus  @default(PENDING)
+  createdAt   DateTime            @default(now())
+  expiresAt   DateTime
+
+  @@index([receiverId, status])
+}
+
+model MatchmakingQueue {
+  id             String       @id @default(cuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id])
+  genre          String?
+  language       String?
+  cameraPref     Boolean?
+  ageRangeMin    Int?
+  ageRangeMax    Int?
+  status         QueueStatus  @default(WAITING)
+  matchedRoomId  String?
+  matchedRoom    Room?        @relation(fields: [matchedRoomId], references: [id])
+  createdAt      DateTime     @default(now())
+
+  @@index([status, genre, language])
+}
+
+model Message {
+  id             String     @id @default(cuid())
+  roomId         String
+  room           Room       @relation(fields: [roomId], references: [id])
+  senderId       String
+  sender         User       @relation(fields: [senderId], references: [id])
+  content        String
+  videoTimestamp Int?       // seconds into playback; local-media path only (FR-6.6)
+  createdAt      DateTime   @default(now())
+
+  reactions      Reaction[]
+
+  @@index([roomId, createdAt])
+}
+
+model Reaction {
+  id        String   @id @default(cuid())
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id])
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  @@unique([messageId, userId, emoji])
+}
+
+// ---------- Admin panel accountability (FR-8.8) ----------
+
+model AdminActionLog {
+  id         String   @id @default(cuid())
+  adminId    String
+  admin      User     @relation(fields: [adminId], references: [id])
+  action     String   // e.g. "report_actioned", "user_suspended", "badge_created"
+  targetType String   // e.g. "Report", "User", "Badge"
+  targetId   String
+  details    Json?
+  createdAt  DateTime @default(now())
+
+  @@index([adminId, createdAt])
+}
+
+// ---------- Friends / contacts (backs FR-3.1 "existing contact") ----------
+
+model Contact {
+  id           String        @id @default(cuid())
+  initiatorId  String
+  initiator    User          @relation("ContactInitiator", fields: [initiatorId], references: [id])
+  receiverId   String
+  receiver     User          @relation("ContactReceiver", fields: [receiverId], references: [id])
+  status       ContactStatus @default(PENDING)
+  createdAt    DateTime      @default(now())
+
+  @@unique([initiatorId, receiverId])
+  @@index([receiverId, status])
+}
+
+// ---------- Safety / moderation (needed for public stranger matchmaking) ----------
+
+model Report {
+  id           String        @id @default(cuid())
+  reporterId   String
+  reporter     User          @relation("ReportsFiled", fields: [reporterId], references: [id])
+  reportedId   String
+  reported     User          @relation("ReportsAgainst", fields: [reportedId], references: [id])
+  roomId       String?
+  room         Room?         @relation(fields: [roomId], references: [id])
+  reason       ReportReason
+  details      String?
+  status       ReportStatus  @default(OPEN)
+  reviewedById String?
+  reviewedBy   User?         @relation("ReportsReviewed", fields: [reviewedById], references: [id])
+  resolutionNote String?
+  reviewedAt   DateTime?
+  createdAt    DateTime      @default(now())
+
+  @@index([reportedId, status])
+}
+
+// ---------- Notifications (backs FR-3.2, FR-4.3) ----------
+
+model Notification {
+  id        String            @id @default(cuid())
+  userId    String
+  user      User              @relation(fields: [userId], references: [id])
+  type      NotificationType
+  payload   Json
+  isRead    Boolean           @default(false)
+  createdAt DateTime          @default(now())
+
+  @@index([userId, isRead])
+}
+
+// ---------- Auth token management ----------
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  tokenHash String   @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ---------- Watch history, reviews, gamification ----------
+
+model WatchHistory {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  roomId      String
+  room        Room     @relation(fields: [roomId], references: [id])
+  watchedWith String[] // participant user IDs
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  roomId    String
+  room      Room     @relation(fields: [roomId], references: [id])
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  rating    Int      // 1-5
+  comment   String?
+  createdAt DateTime @default(now())
+
+  @@index([roomId])
+}
+
+model Badge {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  description String
+  iconUrl     String?
+  users       UserBadge[]
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  badgeId   String
+  badge     Badge    @relation(fields: [badgeId], references: [id])
+  earnedAt  DateTime @default(now())
+
+  @@unique([userId, badgeId])
+}
