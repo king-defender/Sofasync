@@ -824,7 +824,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
               className={`text-xs px-2.5 py-1 rounded-full border font-semibold flex items-center gap-1.5 ${
                 hostControlsOnly
                   ? 'bg-foreground/5 text-muted-foreground border-foreground/10'
-                  : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                  : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
               }`}
             >
               {hostControlsOnly ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
@@ -839,9 +839,9 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
           {isHost && isBroadcasting && (
             <button
               onClick={stopBroadcasting}
-              className="px-3.5 py-1.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-bold border border-red-500/30 flex items-center gap-1.5 transition-all shadow"
+              className="px-3.5 py-1.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-600 dark:text-red-400 text-xs font-bold border border-red-500/30 flex items-center gap-1.5 transition-all shadow"
             >
-              <StopCircle className="w-4 h-4 text-red-400" />
+              <StopCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
               Stop Sharing Screen
             </button>
           )}
@@ -852,7 +852,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
             title="Turn your camera off and stay on voice only"
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border transition-all ${
               !cameraOn
-                ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300'
+                ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-300'
                 : 'bg-foreground/5 border-foreground/10 text-muted-foreground'
             }`}
           >
@@ -916,13 +916,13 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
             onClick={copyRoomLink}
             className="px-3.5 py-1.5 rounded-xl bg-foreground/5 hover:bg-foreground/10 text-foreground text-xs font-semibold flex items-center gap-1.5 border border-foreground/10 transition-colors"
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
             {copied ? 'Copied!' : 'Share Link'}
           </button>
 
           <button
             onClick={() => setShowReportModal(true)}
-            className="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-colors"
+            className="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/20 transition-colors"
             title="Report participant"
           >
             <AlertTriangle className="w-4 h-4" />
@@ -998,7 +998,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
                           if (id) saveFavorite(id);
                         }}
                         title="Save to favorites"
-                        className="p-2.5 rounded-xl bg-foreground/5 hover:bg-foreground/10 border border-foreground/10 text-amber-400 flex-shrink-0"
+                        className="p-2.5 rounded-xl bg-foreground/5 hover:bg-foreground/10 border border-foreground/10 text-amber-600 dark:text-amber-400 flex-shrink-0"
                       >
                         <Star className="w-4 h-4" />
                       </button>
@@ -1107,7 +1107,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
                 />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-gray-900 text-muted-foreground">
-                  <span className="font-bold text-sm text-indigo-300">You</span>
+                  <span className="font-bold text-sm text-indigo-600 dark:text-indigo-300">You</span>
                 </div>
               )}
               <div className="absolute bottom-1 left-1 bg-black/70 px-1.5 py-0.5 rounded text-[10px] font-semibold text-foreground">
@@ -1184,7 +1184,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
             {messages.map((msg) => (
               <div key={msg.id} className="flex flex-col gap-1 group">
                 <div className="flex items-center justify-between text-[11px]">
-                  <span className="font-semibold text-indigo-300">
+                  <span className="font-semibold text-indigo-600 dark:text-indigo-300">
                     {msg.sender?.displayName || 'User'}
                   </span>
                   <span className="text-muted-foreground">
@@ -1203,7 +1203,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
                   {msg.videoTimestamp !== null && msg.videoTimestamp !== undefined && (
                     <button
                       onClick={() => seekVideoToTimestamp(msg.videoTimestamp)}
-                      className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-bold text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/30 transition-colors"
+                      className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/30 transition-colors"
                     >
                       <Clock className="w-3 h-3" />
                       Jump to {formatTimestamp(msg.videoTimestamp)}
@@ -1227,7 +1227,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
                   {/* Quick Reaction Button */}
                   <button
                     onClick={() => setShowEmojiPicker(showEmojiPicker === msg.id ? null : msg.id)}
-                    className="absolute -top-2 right-2 opacity-0 group-hover:opacity-100 bg-card p-1 rounded-full text-muted-foreground hover:text-amber-400 transition-opacity border border-foreground/10"
+                    className="absolute -top-2 right-2 opacity-0 group-hover:opacity-100 bg-card p-1 rounded-full text-muted-foreground hover:text-amber-600 dark:text-amber-400 transition-opacity border border-foreground/10"
                   >
                     <Smile className="w-3.5 h-3.5" />
                   </button>
@@ -1286,7 +1286,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
                       {(item.addedBy?.id === currentUser.id || isHost) && (
                         <button
                           onClick={() => removeQueueItem(item.id)}
-                          className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400"
+                          className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400"
                           title="Remove"
                         >
                           <X className="w-3.5 h-3.5" />
@@ -1413,7 +1413,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
           <div className="glass-panel w-full max-w-md p-6 rounded-2xl border border-red-500/30">
             <h3 className="text-lg font-bold text-foreground mb-2 flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-red-400" />
+              <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
               File Safety Report
             </h3>
             <p className="text-xs text-muted-foreground mb-4">
@@ -1501,7 +1501,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
                 >
                   <Star
                     className={`w-6 h-6 ${
-                      star <= reviewRating ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground'
+                      star <= reviewRating ? 'fill-amber-400 text-amber-600 dark:text-amber-400' : 'text-muted-foreground'
                     }`}
                   />
                 </button>

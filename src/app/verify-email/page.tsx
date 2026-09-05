@@ -62,7 +62,7 @@ function VerifyEmailContent() {
 
         {status === 'success' && (
           <>
-            <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto" />
+            <CheckCircle2 className="w-10 h-10 text-emerald-600 dark:text-emerald-400 mx-auto" />
             <h2 className="text-xl font-bold text-foreground">Email verified</h2>
             <p className="text-xs text-muted-foreground">Your account is ready. You can log in now.</p>
             <Link
@@ -76,7 +76,7 @@ function VerifyEmailContent() {
 
         {status === 'error' && (
           <>
-            <XCircle className="w-10 h-10 text-red-400 mx-auto" />
+            <XCircle className="w-10 h-10 text-red-600 dark:text-red-400 mx-auto" />
             <h2 className="text-xl font-bold text-foreground">Verification failed</h2>
             <p className="text-xs text-muted-foreground">{error}</p>
             <Link href="/login" className="text-primary text-xs font-semibold hover:underline">

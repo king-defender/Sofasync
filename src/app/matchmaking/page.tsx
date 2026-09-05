@@ -134,7 +134,7 @@ export default function MatchmakingPage() {
 
             <button
               onClick={leaveQueue}
-              className="px-6 py-2.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-bold rounded-xl border border-red-500/30 flex items-center gap-2 transition-colors"
+              className="px-6 py-2.5 bg-red-500/20 hover:bg-red-500/30 text-red-600 dark:text-red-400 text-xs font-bold rounded-xl border border-red-500/30 flex items-center gap-2 transition-colors"
             >
               <X className="w-4 h-4" />
               Cancel Queue Search
@@ -188,19 +188,19 @@ export default function MatchmakingPage() {
               {/* Camera Preference */}
               <div>
                 <label className="text-xs font-semibold text-muted-foreground block mb-1.5 flex items-center gap-1.5">
-                  <Video className="w-4 h-4 text-emerald-400" />
+                  <Video className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   Webcam Preference
                 </label>
                 <button
                   onClick={() => setCameraPref(!cameraPref)}
                   className={`w-full p-3 rounded-xl text-xs font-semibold flex items-center justify-between border transition-all ${
                     cameraPref
-                      ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300'
+                      ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-300'
                       : 'bg-foreground/5 border-foreground/10 text-muted-foreground'
                   }`}
                 >
                   <span>{cameraPref ? 'Camera On Recommended' : 'Camera Optional'}</span>
-                  {cameraPref && <Check className="w-4 h-4 text-emerald-400" />}
+                  {cameraPref && <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />}
                 </button>
               </div>
 

@@ -94,7 +94,7 @@ export default function Navbar() {
 
             <Link
               href="/matchmaking"
-              className="text-sm font-medium text-indigo-300 hover:text-foreground transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 border border-primary/30"
+              className="text-sm font-medium text-indigo-600 dark:text-indigo-300 hover:text-foreground transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 border border-primary/30"
             >
               <Sparkles className="w-4 h-4 text-primary" />
               Find Buddy
@@ -111,7 +111,7 @@ export default function Navbar() {
             {user.role === 'SUPER_ADMIN' && (
               <Link
                 href="/admin"
-                className="text-sm font-medium text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30"
+                className="text-sm font-medium text-amber-600 dark:text-amber-400 hover:text-amber-600 dark:text-amber-300 transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30"
               >
                 <Shield className="w-4 h-4" />
                 Admin Panel
@@ -147,7 +147,7 @@ export default function Navbar() {
                           key={n.id}
                           className="text-xs p-2.5 rounded-lg bg-foreground/5 border border-foreground/5 flex flex-col gap-1"
                         >
-                          <span className="font-semibold text-indigo-300">
+                          <span className="font-semibold text-indigo-600 dark:text-indigo-300">
                             {n.type === 'BUDDY_REQUEST'
                               ? '📨 Buddy Room Invite'
                               : n.type === 'BADGE_EARNED'
@@ -191,7 +191,7 @@ export default function Navbar() {
               </span>
               <button
                 onClick={handleLogout}
-                className="p-1.5 rounded-lg text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-red-600 dark:text-red-400 hover:bg-red-500/10 transition-colors"
                 title="Logout"
               >
                 <LogOut className="w-4 h-4" />

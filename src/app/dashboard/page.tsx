@@ -176,7 +176,7 @@ export default function DashboardPage() {
             title="Anyone can find and join this room from the public lobby"
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border transition-all ${
               makePublic
-                ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300'
+                ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-300'
                 : 'bg-foreground/5 border-foreground/10 text-muted-foreground'
             }`}
           >
@@ -195,7 +195,7 @@ export default function DashboardPage() {
 
           <Link
             href="/matchmaking"
-            className="px-6 py-3 bg-primary/10 hover:bg-primary/20 text-indigo-300 text-xs font-bold rounded-2xl border border-primary/30 transition-all flex items-center gap-2"
+            className="px-6 py-3 bg-primary/10 hover:bg-primary/20 text-indigo-600 dark:text-indigo-300 text-xs font-bold rounded-2xl border border-primary/30 transition-all flex items-center gap-2"
           >
             <Sparkles className="w-4 h-4 text-primary" />
             Find a Buddy
@@ -231,7 +231,7 @@ export default function DashboardPage() {
                 >
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                         {r.mediaSource === 'SCREEN_SHARE'
                           ? 'Screen Share'
                           : r.mediaSource === 'YOUTUBE'
@@ -260,7 +260,7 @@ export default function DashboardPage() {
           {/* Badges Section */}
           <div className="pt-4 space-y-4">
             <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-              <Award className="w-5 h-5 text-amber-400" />
+              <Award className="w-5 h-5 text-amber-600 dark:text-amber-400" />
               Earned Badges ({user.badges?.length || 0})
             </h2>
 
@@ -335,7 +335,7 @@ export default function DashboardPage() {
                     <img src={c.avatarUrl} alt="" className="w-8 h-8 rounded-full border border-foreground/10" />
                     <div>
                       <h4 className="text-xs font-bold text-foreground">{c.displayName}</h4>
-                      <span className="text-[10px] text-emerald-400">Ready to watch</span>
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400">Ready to watch</span>
                     </div>
                   </div>
                 </div>

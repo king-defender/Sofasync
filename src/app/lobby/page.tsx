@@ -93,7 +93,7 @@ export default function LobbyPage() {
                       <Icon className="w-3 h-3" />
                       {SOURCE_LABEL[r.mediaSource] || r.mediaSource}
                     </span>
-                    <span className={`text-xs ${full ? 'text-red-400' : 'text-muted-foreground'}`}>
+                    <span className={`text-xs ${full ? 'text-red-600 dark:text-red-400' : 'text-muted-foreground'}`}>
                       {r.participants.length}/4 {full ? '(Full)' : ''}
                     </span>
                   </div>

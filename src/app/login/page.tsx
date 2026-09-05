@@ -77,7 +77,7 @@ function LoginForm() {
         </div>
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-xs p-3 rounded-xl font-semibold">
+          <div className="bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs p-3 rounded-xl font-semibold">
             {error}
           </div>
         )}
@@ -89,7 +89,7 @@ function LoginForm() {
             onClick={() => handleSocialLogin('google')}
             className="w-full py-2.5 px-4 bg-foreground/5 hover:bg-foreground/10 border border-foreground/10 rounded-xl text-xs font-semibold text-foreground flex items-center justify-center gap-3 transition-colors"
           >
-            <Chrome className="w-4 h-4 text-red-400" />
+            <Chrome className="w-4 h-4 text-red-600 dark:text-red-400" />
             Continue with Google
           </button>
 
@@ -107,7 +107,7 @@ function LoginForm() {
             onClick={() => handleSocialLogin('discord')}
             className="w-full py-2.5 px-4 bg-foreground/5 hover:bg-foreground/10 border border-foreground/10 rounded-xl text-xs font-semibold text-foreground flex items-center justify-center gap-3 transition-colors"
           >
-            <Discord className="w-4 h-4 text-indigo-400" />
+            <Discord className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
             Continue with Discord
           </button>
         </div>

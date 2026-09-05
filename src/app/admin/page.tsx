@@ -216,7 +216,7 @@ export default function AdminPage() {
       {/* Admin Header */}
       <div className="glass-panel p-8 rounded-3xl border border-amber-500/30 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center">
             <Shield className="w-6 h-6" />
           </div>
           <div>
@@ -251,9 +251,9 @@ export default function AdminPage() {
         <div className="glass-panel p-5 rounded-2xl border border-foreground/5 flex items-center justify-between">
           <div>
             <span className="text-xs text-muted-foreground font-medium">Open Safety Reports</span>
-            <h3 className="text-2xl font-extrabold text-amber-400 mt-1">{stats?.openReports ?? 0}</h3>
+            <h3 className="text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1">{stats?.openReports ?? 0}</h3>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center">
             <AlertTriangle className="w-5 h-5" />
           </div>
         </div>
@@ -263,7 +263,7 @@ export default function AdminPage() {
             <span className="text-xs text-muted-foreground font-medium">Total Platform Users</span>
             <h3 className="text-2xl font-extrabold text-foreground mt-1">{stats?.totalUsers ?? 0}</h3>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
             <UserCheck className="w-5 h-5" />
           </div>
         </div>
@@ -360,7 +360,7 @@ export default function AdminPage() {
                             <div className="font-semibold text-foreground flex items-center gap-1.5">
                               {u.displayName}
                               {u.isSuspended && (
-                                <span className="text-[9px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded uppercase font-bold">
+                                <span className="text-[9px] bg-red-500/20 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded uppercase font-bold">
                                   Suspended
                                 </span>
                               )}
@@ -374,11 +374,11 @@ export default function AdminPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="p-4 font-mono text-indigo-300">{u.role}</td>
+                      <td className="p-4 font-mono text-indigo-600 dark:text-indigo-300">{u.role}</td>
                       <td className="p-4">
                         <span
                           className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                            u.isVerified ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'
+                            u.isVerified ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
                           }`}
                         >
                           {u.isVerified ? 'Verified' : 'Unverified'}
@@ -392,7 +392,7 @@ export default function AdminPage() {
                           className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
                             u.isVerified
                               ? 'bg-foreground/10 text-muted-foreground hover:bg-foreground/20'
-                              : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
+                              : 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/30'
                           }`}
                         >
                           {u.isVerified ? 'Unverify' : 'Verify'}
@@ -410,8 +410,8 @@ export default function AdminPage() {
                           onClick={() => toggleUserSuspension(u.id, u.isSuspended)}
                           className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
                             u.isSuspended
-                              ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
-                              : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                              ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/30'
+                              : 'bg-red-500/20 text-red-600 dark:text-red-400 hover:bg-red-500/30'
                           }`}
                         >
                           {u.isSuspended ? 'Unsuspend' : 'Suspend'}
@@ -495,22 +495,22 @@ export default function AdminPage() {
                       <td className="p-4 font-semibold text-foreground">{r.reporter?.displayName}</td>
                       <td className="p-4">
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-red-400">{r.reported?.displayName}</span>
+                          <span className="font-semibold text-red-600 dark:text-red-400">{r.reported?.displayName}</span>
                           {r.reported?.isSuspended && (
-                            <span className="text-[10px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded uppercase font-bold">
+                            <span className="text-[10px] bg-red-500/20 text-red-600 dark:text-red-400 px-2 py-0.5 rounded uppercase font-bold">
                               Suspended
                             </span>
                           )}
                         </div>
                       </td>
-                      <td className="p-4 font-mono text-indigo-300">{r.reason}</td>
+                      <td className="p-4 font-mono text-indigo-600 dark:text-indigo-300">{r.reason}</td>
                       <td className="p-4">
                         <span
                           className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
                             r.status === 'OPEN'
-                              ? 'bg-amber-500/20 text-amber-400'
+                              ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
                               : r.status === 'ACTIONED'
-                              ? 'bg-red-500/20 text-red-400'
+                              ? 'bg-red-500/20 text-red-600 dark:text-red-400'
                               : 'bg-muted text-muted-foreground'
                           }`}
                         >
@@ -531,8 +531,8 @@ export default function AdminPage() {
                           onClick={() => toggleUserSuspension(r.reportedId, r.reported?.isSuspended)}
                           className={`px-3 py-1 rounded-lg text-xs font-bold ${
                             r.reported?.isSuspended
-                              ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
-                              : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                              ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/30'
+                              : 'bg-red-500/20 text-red-600 dark:text-red-400 hover:bg-red-500/30'
                           }`}
                         >
                           {r.reported?.isSuspended ? 'Unsuspend' : 'Suspend User'}
@@ -601,7 +601,7 @@ export default function AdminPage() {
           {stats?.recentLogs?.map((log: any) => (
             <div key={log.id} className="p-3 rounded-xl bg-foreground/5 text-xs flex items-center justify-between">
               <div>
-                <span className="font-bold text-indigo-300">{log.admin?.displayName}: </span>
+                <span className="font-bold text-indigo-600 dark:text-indigo-300">{log.admin?.displayName}: </span>
                 <span className="text-foreground font-mono">{log.action} </span>
                 <span className="text-muted-foreground">on {log.targetType} ({log.targetId})</span>
               </div>

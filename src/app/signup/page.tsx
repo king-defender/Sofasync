@@ -59,14 +59,14 @@ export default function SignupPage() {
         </div>
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-xs p-3 rounded-xl font-semibold">
+          <div className="bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs p-3 rounded-xl font-semibold">
             {error}
           </div>
         )}
 
         {created ? (
           <div className="text-center space-y-3">
-            <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto" />
+            <CheckCircle2 className="w-10 h-10 text-emerald-600 dark:text-emerald-400 mx-auto" />
             <p className="text-sm text-muted-foreground">
               {verificationRequired ? (
                 <>Account created! Check <span className="font-semibold text-foreground">{email}</span> for a verification link before logging in.</>
@@ -90,7 +90,7 @@ export default function SignupPage() {
             onClick={() => handleSocialLogin('google')}
             className="w-full py-2.5 px-4 bg-foreground/5 hover:bg-foreground/10 border border-foreground/10 rounded-xl text-xs font-semibold text-foreground flex items-center justify-center gap-3 transition-colors"
           >
-            <Chrome className="w-4 h-4 text-red-400" />
+            <Chrome className="w-4 h-4 text-red-600 dark:text-red-400" />
             Sign up with Google
           </button>
 
@@ -108,7 +108,7 @@ export default function SignupPage() {
             onClick={() => handleSocialLogin('discord')}
             className="w-full py-2.5 px-4 bg-foreground/5 hover:bg-foreground/10 border border-foreground/10 rounded-xl text-xs font-semibold text-foreground flex items-center justify-center gap-3 transition-colors"
           >
-            <Discord className="w-4 h-4 text-indigo-400" />
+            <Discord className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
             Sign up with Discord
           </button>
         </div>

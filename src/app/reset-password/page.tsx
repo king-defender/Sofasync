@@ -63,14 +63,14 @@ function ResetPasswordForm() {
         </div>
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-xs p-3 rounded-xl font-semibold">
+          <div className="bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs p-3 rounded-xl font-semibold">
             {error}
           </div>
         )}
 
         {done ? (
           <div className="text-center space-y-3">
-            <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto" />
+            <CheckCircle2 className="w-10 h-10 text-emerald-600 dark:text-emerald-400 mx-auto" />
             <p className="text-sm text-muted-foreground">Password updated. Redirecting you to login...</p>
           </div>
         ) : (

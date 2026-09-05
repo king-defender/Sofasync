@@ -25,9 +25,11 @@ export default function Home() {
 
   return (
     <div className="relative min-h-[calc(100vh-65px)] flex flex-col items-center justify-center px-6 overflow-hidden">
-      {/* Dynamic Ambient Background Glows */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/20 rounded-full blur-[140px] pointer-events-none"></div>
-      <div className="absolute bottom-10 right-10 w-[400px] h-[400px] bg-secondary/15 rounded-full blur-[120px] pointer-events-none"></div>
+      {/* Dynamic Ambient Background Glows - much lower opacity in light mode;
+          the same values that glow nicely against a near-black canvas read
+          as a flat gray-lavender wash against a near-white one */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 dark:bg-primary/20 rounded-full blur-[140px] pointer-events-none"></div>
+      <div className="absolute bottom-10 right-10 w-[400px] h-[400px] bg-secondary/5 dark:bg-secondary/15 rounded-full blur-[120px] pointer-events-none"></div>
 
       {/* Hero Content */}
       <div className="max-w-4xl text-center space-y-8 z-10 py-12">
@@ -62,7 +64,7 @@ export default function Home() {
             disabled={loadingGuest}
             className="w-full sm:w-auto px-8 py-4 glass-card hover:bg-foreground/10 text-foreground text-base font-semibold rounded-2xl border border-foreground/10 transition-all flex items-center justify-center gap-2"
           >
-            <Zap className="w-5 h-5 text-amber-400" />
+            <Zap className="w-5 h-5 text-amber-600 dark:text-amber-400" />
             {loadingGuest ? 'Starting Session...' : 'Instant Guest Start'}
           </button>
         </div>
