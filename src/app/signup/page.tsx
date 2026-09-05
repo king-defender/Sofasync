@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Tv, Lock, Mail, User, ArrowRight, Github, Chrome, Disc as Discord, CheckCircle2 } from 'lucide-react';
+import { Tv, Lock, Mail, Phone, User, ArrowRight, Github, Chrome, Disc as Discord, CheckCircle2 } from 'lucide-react';
 
 export default function SignupPage() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -34,7 +35,7 @@ export default function SignupPage() {
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, displayName }),
+        body: JSON.stringify({ email, phone, password, displayName }),
       });
 
       const data = await res.json();
@@ -165,6 +166,22 @@ export default function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@example.com"
+                className="w-full bg-foreground/5 border border-foreground/10 rounded-xl pl-10 pr-4 py-2.5 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-muted-foreground block mb-1.5">
+              Phone Number <span className="normal-case font-normal text-muted-foreground/70">(optional - lets you log in with it too)</span>
+            </label>
+            <div className="relative">
+              <Phone className="w-4 h-4 text-muted-foreground absolute left-3.5 top-3" />
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+1 555 123 4567"
                 className="w-full bg-foreground/5 border border-foreground/10 rounded-xl pl-10 pr-4 py-2.5 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary"
               />
             </div>

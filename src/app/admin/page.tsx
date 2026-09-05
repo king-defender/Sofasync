@@ -17,6 +17,7 @@ import {
   Search,
   Mail,
   Settings as SettingsIcon,
+  Trash2,
 } from 'lucide-react';
 
 export default function AdminPage() {
@@ -113,6 +114,23 @@ export default function AdminPage() {
       const res = await fetch(`/api/admin/users/${userId}/resend-verification`, { method: 'POST' });
       const data = await res.json();
       alert(data.message || data.error);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const deleteUser = async (userId: string, displayName: string) => {
+    if (!confirm(`Delete ${displayName}? Their email/name/avatar will be scrubbed and they'll be logged out and blocked from logging back in. Their past messages and room history stay intact for other users. This can't be undone from here.`)) {
+      return;
+    }
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
+      if (res.ok) {
+        fetchUsers(userSearch);
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to delete user');
+      }
     } catch (e) {
       console.error(e);
     }
@@ -352,14 +370,19 @@ export default function AdminPage() {
                   </tr>
                 ) : (
                   users.map((u) => (
-                    <tr key={u.id} className="hover:bg-foreground/5">
+                    <tr key={u.id} className={`hover:bg-foreground/5 ${u.deletedAt ? 'opacity-50' : ''}`}>
                       <td className="p-4">
                         <div className="flex items-center gap-2.5">
-                          <img src={u.avatarUrl} alt="" className="w-7 h-7 rounded-full" />
+                          <img src={u.avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${u.id}`} alt="" className="w-7 h-7 rounded-full" />
                           <div>
                             <div className="font-semibold text-foreground flex items-center gap-1.5">
                               {u.displayName}
-                              {u.isSuspended && (
+                              {u.deletedAt && (
+                                <span className="text-[9px] bg-foreground/20 text-muted-foreground px-1.5 py-0.5 rounded uppercase font-bold">
+                                  Deleted
+                                </span>
+                              )}
+                              {u.isSuspended && !u.deletedAt && (
                                 <span className="text-[9px] bg-red-500/20 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded uppercase font-bold">
                                   Suspended
                                 </span>
@@ -371,6 +394,7 @@ export default function AdminPage() {
                               )}
                             </div>
                             <div className="text-muted-foreground">{u.email}</div>
+                            {u.phone && <div className="text-muted-foreground">{u.phone}</div>}
                           </div>
                         </div>
                       </td>
@@ -387,35 +411,50 @@ export default function AdminPage() {
                       <td className="p-4 text-muted-foreground">{u._count?.badges ?? 0}</td>
                       <td className="p-4 text-muted-foreground">{new Date(u.createdAt).toLocaleDateString()}</td>
                       <td className="p-4 text-right space-x-2 whitespace-nowrap">
-                        <button
-                          onClick={() => toggleUserVerified(u.id, u.isVerified)}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
-                            u.isVerified
-                              ? 'bg-foreground/10 text-muted-foreground hover:bg-foreground/20'
-                              : 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/30'
-                          }`}
-                        >
-                          {u.isVerified ? 'Unverify' : 'Verify'}
-                        </button>
-                        {!u.isVerified && !u.isGuest && (
-                          <button
-                            onClick={() => resendVerification(u.id)}
-                            title="Resend verification email"
-                            className="px-2 py-1 rounded-lg text-xs font-bold bg-foreground/10 text-muted-foreground hover:bg-foreground/20 inline-flex items-center gap-1"
-                          >
-                            <Mail className="w-3 h-3" />
-                          </button>
+                        {u.deletedAt ? (
+                          <span className="text-muted-foreground text-xs">No actions available</span>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => toggleUserVerified(u.id, u.isVerified)}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
+                                u.isVerified
+                                  ? 'bg-foreground/10 text-muted-foreground hover:bg-foreground/20'
+                                  : 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/30'
+                              }`}
+                            >
+                              {u.isVerified ? 'Unverify' : 'Verify'}
+                            </button>
+                            {!u.isVerified && !u.isGuest && (
+                              <button
+                                onClick={() => resendVerification(u.id)}
+                                title="Resend verification email"
+                                className="px-2 py-1 rounded-lg text-xs font-bold bg-foreground/10 text-muted-foreground hover:bg-foreground/20 inline-flex items-center gap-1"
+                              >
+                                <Mail className="w-3 h-3" />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => toggleUserSuspension(u.id, u.isSuspended)}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
+                                u.isSuspended
+                                  ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/30'
+                                  : 'bg-red-500/20 text-red-600 dark:text-red-400 hover:bg-red-500/30'
+                              }`}
+                            >
+                              {u.isSuspended ? 'Unsuspend' : 'Suspend'}
+                            </button>
+                            {u.role !== 'SUPER_ADMIN' && (
+                              <button
+                                onClick={() => deleteUser(u.id, u.displayName)}
+                                title="Delete user"
+                                className="px-2 py-1 rounded-lg text-xs font-bold bg-red-600 text-white hover:bg-red-700 inline-flex items-center gap-1"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            )}
+                          </>
                         )}
-                        <button
-                          onClick={() => toggleUserSuspension(u.id, u.isSuspended)}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
-                            u.isSuspended
-                              ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/30'
-                              : 'bg-red-500/20 text-red-600 dark:text-red-400 hover:bg-red-500/30'
-                          }`}
-                        >
-                          {u.isSuspended ? 'Unsuspend' : 'Suspend'}
-                        </button>
                       </td>
                     </tr>
                   ))

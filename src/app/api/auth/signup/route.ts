@@ -5,9 +5,20 @@ import { hashPassword } from '@/lib/auth';
 import { sendMail, verificationEmail } from '@/lib/mailer';
 import { getAppSettings } from '@/lib/settings';
 
+// Strips everything but digits and a leading "+", then requires a plausible
+// international length - not real phone validation (that needs a carrier
+// lookup or a library), just enough to reject obvious garbage.
+function normalizePhone(input: string): string | null {
+  const trimmed = input.trim();
+  const hasPlus = trimmed.startsWith('+');
+  const digits = trimmed.replace(/\D/g, '');
+  if (digits.length < 7 || digits.length > 15) return null;
+  return (hasPlus ? '+' : '') + digits;
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { email, password, displayName } = await req.json();
+    const { email, password, displayName, phone } = await req.json();
 
     if (!email || !password || !displayName) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -26,9 +37,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Password must be at most 72 characters' }, { status: 400 });
     }
 
+    let normalizedPhone: string | null = null;
+    if (phone && phone.trim()) {
+      normalizedPhone = normalizePhone(phone);
+      if (!normalizedPhone) {
+        return NextResponse.json({ error: 'Invalid phone number' }, { status: 400 });
+      }
+    }
+
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       return NextResponse.json({ error: 'Email already registered' }, { status: 400 });
+    }
+
+    if (normalizedPhone) {
+      const existingPhone = await prisma.user.findUnique({ where: { phone: normalizedPhone } });
+      if (existingPhone) {
+        return NextResponse.json({ error: 'Phone number already registered' }, { status: 400 });
+      }
     }
 
     const { requireEmailVerification } = await getAppSettings();
@@ -37,6 +63,7 @@ export async function POST(req: NextRequest) {
     const user = await prisma.user.create({
       data: {
         email,
+        phone: normalizedPhone,
         passwordHash,
         displayName,
         isVerified: !requireEmailVerification, // FR-1.2, unless an admin has turned the requirement off

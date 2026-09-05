@@ -9,17 +9,19 @@ const LOGIN_WINDOW_SECONDS = 15 * 60;
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password } = await req.json();
+    const body = await req.json();
+    const identifier: string | undefined = body.identifier ?? body.email;
+    const { password } = body;
 
-    if (!email || !password) {
-      return NextResponse.json({ error: 'Email and password required' }, { status: 400 });
+    if (!identifier || !password) {
+      return NextResponse.json({ error: 'Email/phone and password required' }, { status: 400 });
     }
 
-    // Keyed by email, not IP - this app sits behind Render's proxy without
-    // guaranteed client-IP forwarding configured, and email-keyed still
-    // stops the thing that actually matters here: guessing one account's
-    // password over and over.
-    const rateLimitKey = `ratelimit:login:${email.toLowerCase()}`;
+    // Keyed by the raw identifier, not IP - this app sits behind Render's
+    // proxy without guaranteed client-IP forwarding configured, and an
+    // identifier-keyed limit still stops the thing that actually matters
+    // here: guessing one account's password over and over.
+    const rateLimitKey = `ratelimit:login:${identifier.trim().toLowerCase()}`;
     if (await isRateLimited(rateLimitKey, LOGIN_ATTEMPT_LIMIT)) {
       return NextResponse.json(
         { error: 'Too many failed login attempts. Try again in 15 minutes.' },
@@ -27,7 +29,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    // An identifier with "@" is treated as an email; anything else is
+    // matched against phone as digits-only (spaces/dashes/parens ignored,
+    // same normalization signup applies before storing it).
+    const trimmed = identifier.trim();
+    const user = trimmed.includes('@')
+      ? await prisma.user.findUnique({ where: { email: trimmed } })
+      : await prisma.user.findUnique({ where: { phone: trimmed.replace(/[^\d+]/g, '') } });
+
     if (!user || !user.passwordHash) {
       await recordFailure(rateLimitKey, LOGIN_WINDOW_SECONDS);
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
