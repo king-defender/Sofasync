@@ -184,8 +184,11 @@ app.prepare().then(() => {
       socket.to(socket.data?.roomId).emit('webrtc:ice-candidate', { targetUserId, candidate, senderUserId });
     });
 
-    socket.on('webrtc:track-added', ({ userId, trackKind }) => {
-      socket.to(socket.data?.roomId).emit('webrtc:track-added', { userId, trackKind });
+    // Plain passthrough - carries whatever fields the sender includes (e.g.
+    // trackId/trackKind so peers can tell the movie feed from a webcam track;
+    // see RoomClient.tsx's movieTrackIds).
+    socket.on('webrtc:track-added', (payload) => {
+      socket.to(socket.data?.roomId).emit('webrtc:track-added', payload);
     });
 
     // Matchmaking Join Queue (FR-4.1 - FR-4.6)

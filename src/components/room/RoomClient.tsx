@@ -56,6 +56,13 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
   const peerConnections = useRef<{ [userId: string]: RTCPeerConnection }>({});
   const [remoteStreams, setRemoteStreams] = useState<{ [userId: string]: MediaStream }>({});
 
+  // Which incoming video track IDs are the movie feed (not webcam) - set via
+  // explicit signaling rather than sniffing event.track.label, which only
+  // ever contains "screen" for getDisplayMedia() and is blank for a local
+  // file's captureStream(), silently misrouting the local-media path.
+  const movieTrackIds = useRef<Set<string>>(new Set());
+  const pendingTrackClassification = useRef<{ [trackId: string]: { peerId: string; stream: MediaStream } }>({});
+
   // Real-time Chat
   const [messages, setMessages] = useState<any[]>([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -180,6 +187,27 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
       }
     });
 
+    // Tells us which incoming track IDs are the movie feed vs. webcam - see
+    // movieTrackIds above for why label-sniffing doesn't work here.
+    socket.on('webrtc:track-added', ({ trackId, trackKind }: { trackId?: string; trackKind?: string }) => {
+      if (trackKind !== 'movie' || !trackId) return;
+      movieTrackIds.current.add(trackId);
+
+      const pending = pendingTrackClassification.current[trackId];
+      if (pending) {
+        if (mainVideoRef.current) {
+          mainVideoRef.current.srcObject = pending.stream;
+          mainVideoRef.current.play();
+        }
+        setRemoteStreams((prev) => {
+          const updated = { ...prev };
+          delete updated[pending.peerId];
+          return updated;
+        });
+        delete pendingTrackClassification.current[trackId];
+      }
+    });
+
     return () => {
       socket.disconnect();
       if (localWebcamStream) {
@@ -278,6 +306,9 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
     Object.values(peerConnections.current).forEach((pc) => {
       stream.getTracks().forEach((track) => {
         pc.addTrack(track, stream);
+        if (track.kind === 'video') {
+          socketRef.current?.emit('webrtc:track-added', { trackId: track.id, trackKind: 'movie' });
+        }
       });
     });
     socketRef.current?.emit('room:movie-stream-started', { roomId, streamType: mediaSource });
@@ -389,13 +420,24 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
     }
 
     if (activeMovieStreamRef.current) {
-      activeMovieStreamRef.current.getTracks().forEach((track) => pc.addTrack(track, activeMovieStreamRef.current!));
+      activeMovieStreamRef.current.getTracks().forEach((track) => {
+        pc.addTrack(track, activeMovieStreamRef.current!);
+        if (track.kind === 'video') {
+          socketRef.current?.emit('webrtc:track-added', { trackId: track.id, trackKind: 'movie' });
+        }
+      });
     }
 
     pc.ontrack = (event) => {
       const incomingStream = event.streams[0];
-      // Route screen-share/movie track to mainVideoRef, webcam tracks to remoteStreams
-      if (event.track.kind === 'video' && event.track.label.toLowerCase().includes('screen')) {
+      const trackId = event.track.id;
+
+      // Route the movie feed to the main player, webcam tracks to the bubble
+      // row. Which track IS the movie feed is decided by explicit signaling
+      // (movieTrackIds), not by sniffing event.track.label - that only ever
+      // says "screen" for a screen-share; a local file's captureStream()
+      // track has no such label and would otherwise land in a webcam bubble.
+      if (event.track.kind === 'video' && movieTrackIds.current.has(trackId)) {
         if (mainVideoRef.current) {
           mainVideoRef.current.srcObject = incomingStream;
           mainVideoRef.current.play();
@@ -405,6 +447,13 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
           ...prev,
           [targetUserId]: incomingStream,
         }));
+
+        if (event.track.kind === 'video') {
+          // Not yet known to be the movie track - the "movie" classification
+          // may simply not have arrived yet. Keep it as a candidate so it can
+          // be moved to the main player the moment that message lands.
+          pendingTrackClassification.current[trackId] = { peerId: targetUserId, stream: incomingStream };
+        }
       }
     };
 
