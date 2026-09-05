@@ -2,19 +2,24 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Tv, Bell, Shield, LogOut, User as UserIcon, Sparkles, Users, Compass } from 'lucide-react';
 
 export default function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<any>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [showNotifs, setShowNotifs] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
+  // Re-check auth on every route change, not just once on first mount - the
+  // navbar lives in the root layout, which persists across a client-side
+  // router.push() (e.g. straight after login), so without this it keeps
+  // showing whatever auth state was true before you logged in.
   useEffect(() => {
     fetchUser();
-  }, []);
+  }, [pathname]);
 
   const fetchUser = async () => {
     try {
