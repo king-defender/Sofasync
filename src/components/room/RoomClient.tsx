@@ -96,6 +96,12 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
   const [isBroadcasting, setIsBroadcasting] = useState(false);
   const activeMovieStreamRef = useRef<MediaStream | null>(null);
 
+  // ICE servers (STUN + TURN if configured) - fetched once, used for every
+  // peer connection. A ref, not state: created fresh per-peer-connection call,
+  // no need to re-render when it arrives, just needs to be there by the time
+  // the first connection is actually opened.
+  const iceServersRef = useRef<RTCIceServer[]>([{ urls: 'stun:stun.l.google.com:19302' }]);
+
   // Webcam & Audio controls
   const [cameraOn, setCameraOn] = useState(true);
   const [micOn, setMicOn] = useState(true);
@@ -134,6 +140,15 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
   const [contacts, setContacts] = useState<any[]>([]);
 
   useEffect(() => {
+    fetch('/api/ice-servers')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data.iceServers) && data.iceServers.length > 0) {
+          iceServersRef.current = data.iceServers;
+        }
+      })
+      .catch(() => {}); // keep the STUN-only default on failure
+
     fetchRoomDetails();
     fetchContacts();
     fetchFavorites();
@@ -636,7 +651,7 @@ export default function RoomClient({ roomId, currentUser }: RoomClientProps) {
     }
 
     const pc = new RTCPeerConnection({
-      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+      iceServers: iceServersRef.current,
     });
 
     peerConnections.current[targetUserId] = pc;
