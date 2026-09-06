@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node server.js",
-    "build": "prisma generate && next build",
-    "start": "NODE_ENV=production node server.js",
+    "dev": "node api.js && node server.js",
+    "build": "node api.js && prisma generate && next build",
+    "start": "node api.js && NODE_ENV=production node server.js",
     "lint": "next lint",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
