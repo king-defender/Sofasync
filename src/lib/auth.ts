@@ -6,7 +6,17 @@ import { NextRequest } from 'next/server';
 // secret that's sitting in this file's git history on a public repo. The
 // fallback only exists so `npm run dev` works with zero setup locally -
 // production must always set its own.
-if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+//
+// Skip during `next build` (NEXT_PHASE=phase-production-build): Next sets
+// NODE_ENV=production while collecting page data for every API route, which
+// runs this module at build time with no real env vars available yet -
+// without this exception the production build can never succeed at all,
+// even on Render where JWT_SECRET is genuinely set before the app starts.
+if (
+  process.env.NODE_ENV === 'production' &&
+  process.env.NEXT_PHASE !== 'phase-production-build' &&
+  !process.env.JWT_SECRET
+) {
   throw new Error('JWT_SECRET must be set in production - refusing to start with the public fallback secret.');
 }
 const JWT_SECRET = process.env.JWT_SECRET || 'sofasync_jwt_secret_key_production_ready_hash_2026';

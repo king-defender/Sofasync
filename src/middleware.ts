@@ -12,7 +12,13 @@ import { jwtVerify } from 'jose';
 // default, which has no Node crypto - jose is built on Web Crypto instead.
 // Can't import the same check from src/lib/auth.ts here: that file also
 // pulls in bcryptjs/jsonwebtoken, which aren't Edge-compatible.
-if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+// Skipped during `next build` (see src/lib/auth.ts for why) - otherwise the
+// production build fails before it ever gets a chance to run with real env vars.
+if (
+  process.env.NODE_ENV === 'production' &&
+  process.env.NEXT_PHASE !== 'phase-production-build' &&
+  !process.env.JWT_SECRET
+) {
   throw new Error('JWT_SECRET must be set in production - refusing to start with the public fallback secret.');
 }
 const JWT_SECRET = new TextEncoder().encode(
